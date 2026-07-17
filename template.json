@@ -1,0 +1,115 @@
+{
+    "BuyerUserID": "",
+    "ipAddress": "",
+    "CustomerName": "", 
+    "CustomerStatus": "", 
+    "Email": "",
+    "Phone": "",
+    "Password": "",
+    "Rewards": "",
+    "Favorite": [
+        {
+            "Product": "",
+            "Format": "",
+            "Form": ""
+        }
+    ],
+    "Addresses": [
+        {
+            "AddressName": "",
+            "AddressExtraName": "",
+            "AddressDetail": "",
+            "AddressStreet": "",
+            "AddressUnit": "",
+            "AddressBuilding": "",
+            "AddressCity": "",
+            "AddressState": "",
+            "AddressZip": "",
+            "AddressCountry": ""
+        }
+    ],
+    "Payments": [
+        {
+            "CCLast4Digit": "",
+            "CCName": "",
+            "CCNumber": "",
+            "CCExpMonth": "",
+            "CCExpYear": "",
+            "CCcode": ""
+        },
+        {
+		    "PaypalType": "",
+		    "PaypalName": "",
+		    "PaypalEmail": "",
+		    "PaypalUniqueId": "",
+		    "PaypalStatus": ""
+        }
+    ],
+    "Recipe": [
+        {
+		    "RecipeDate": "",
+		    "RecipeName": "",
+		    "RecipeFormat": "",
+		    "RecipeQuantity": "",
+		    "Serving": "",
+		    "RecipeCost": "",
+		    "RecipeTime": "",
+		    "Steps": [
+		        {
+		            "Step": "",
+		            "Format": "",
+		            "Ingredient": "",
+		            "StepQuantity": "",
+		            "StepMultiplier": ""
+		        }
+		    ]
+		}
+    ],
+    "Order": [
+        {
+            "OrderId": "",
+            "OrderStaff": "",
+            "OrderDate": "",
+            "OrderTotal": "",
+            "OrderDiscount": "",
+            "OrderReward": "",          
+            "OrderCoupon": "",          
+            "OrderCouponCode": "",          
+            "OrderStatus": "",
+            "OrderLastUpDate": "",
+            "OrderDeliveryDate": "",
+            "OrderLabelId": "",
+            "OrderLabelPrint": "",
+            "OrderTracking": "",
+            "OrderCarrier": "",
+            "OrderCarrierService": "",
+            "OrderCarrierServiceAccount": "",
+            "OrderShipWeightTotal": "",
+            "OrderBoxsize": "",
+            "OrderCarrierFeeRetail": "",
+            "OrderCarrierFeeCost": "",
+            "OrderRetailer": "",
+            "OrderNotes": "",
+            "OrderAddressType": "",
+            "OrderPaymentType": "",
+            "OrderPaid": "",
+            "OrderItems": [
+            	{
+                    "OrderProduct": "",
+                    "OrderProductID": "",
+                    "OrderProductSKU": "",
+                    "OrderFormat": "",
+                    "OrderAttribute": "",
+                    "OrderShipWeight": "",
+                    "OrderQuantity": "",
+                    "OrderQuantityMissing": "",
+                    "OrderPrice": "",
+                    "OrderItemDiscount": "",
+                    "OrderCost": "",
+                    "OrderSubCategory": "",
+                    "OrderTaskPoint": ""
+                }
+            ]
+        }
+    ]
+}

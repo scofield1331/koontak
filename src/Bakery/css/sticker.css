@@ -1,0 +1,43 @@
+body {
+  padding: 0;
+  margin: 0;
+  font-family: arial;
+  font-size: 15px;
+}
+.barcode {
+  margin-top: 4px;
+  margin-bottom: 2px;
+  margin-right: 5px;
+  margin-left: 0px;
+}
+.content_row {
+  text-align: center;
+}
+.content.ingredient {
+  text-align: justify;
+}
+.content_row.sku {
+  display: flex;
+}
+.sku .content {
+  flex: 1;
+  text-align: left;
+}
+.StockShelve {
+  float: right;
+  font-size: 12px;
+  padding-top: 2px;
+  text-align: right;
+}
+hr {
+  width: 100%;
+  margin: 2px 0;
+  border-top: 2px #000 solid;
+}
+.variation,
+.content .serving {
+  margin: 2px auto;
+}
+.sticker {
+  display: inline-block;
+}

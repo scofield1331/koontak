@@ -1,0 +1,64 @@
+#PromoTag {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.list {
+  overflow: scroll;
+  flex: 1;
+}
+.label-card {
+  /* background: #e8d5f0; */
+  border: 1px solid #888;
+  padding: 20px;
+  text-align: center;
+  font-family: Arial, sans-serif;
+  margin-bottom: 10px;
+}
+button {
+  background-color: #9dacff;
+}
+label {
+  cursor: pointer;
+}
+
+.price {
+  font-size: 33px;
+  /*font-weight: bold;*/
+  color: #0000ee;
+  margin: auto;
+  padding: 0;
+  white-space: nowrap;
+  border: 1px solid #000;
+  width: auto;
+  display: inline-block;
+  padding: 10px;
+  margin-top: 15px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #1a1a2e;
+}
+
+.serving {
+  font-size: 22px;
+  font-weight: bold;
+  color: #1a1a2e;
+  margin-top: 6px;
+}
+
+.cooking {
+  font-size: 22px;
+  font-weight: bold;
+  color: #1a1a2e;
+  margin-top: 6px;
+}
+
+.ingredients {
+  font-size: 18px;
+  margin-top: 15px;
+  line-height: 1.2;
+}

@@ -1,0 +1,32 @@
+<div class="modal on" id="modal">
+    <div class="modal-header">
+      <span class="modal-title">Sort by</span>
+      <span class="modal-cancel" onclick="closeModal()">Cancel</span>
+    </div>
+    <div id="opts">
+    <div class="opt" onclick="pick('Stock')">
+      <span class="opt-label">Stock</span>
+      <div class="radio-ring"><div class="radio-dot"></div></div>
+    </div>
+  
+    <div class="opt" onclick="pick('Buy')">
+      <span class="opt-label">Buy</span>
+      <div class="radio-ring"><div class="radio-dot"></div></div>
+    </div>
+  
+    <div class="opt" onclick="pick('Price')">
+      <span class="opt-label">Price</span>
+      <div class="radio-ring"><div class="radio-dot"></div></div>
+    </div>
+  
+    <div class="opt" onclick="pick('Exp Date')">
+      <span class="opt-label">Exp Date</span>
+      <div class="radio-ring"><div class="radio-dot"></div></div>
+    </div>
+  
+    <div class="opt" onclick="pick('Image')">
+      <span class="opt-label">Image</span>
+      <div class="radio-ring"><div class="radio-dot"></div></div>
+    </div>
+  </div>
+  </div>

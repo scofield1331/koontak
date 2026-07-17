@@ -1,0 +1,226 @@
+/* components/popup.css */
+
+/* ── overlay ──────────────────────────────────────────── */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  overflow: scroll;
+}
+
+.popup-overlay.is-open {
+  display: flex;
+}
+
+/* ── container ────────────────────────────────────────── */
+.popup {
+  background: #fff;
+  border: 2px solid #ccc;
+  border-radius: 12px;
+  padding: 1rem;
+  width: 500px;
+  height: auto;
+  max-width: 100%;
+  font-family: sans-serif;
+  font-size: 16px;
+  position: relative;
+  margin: auto;
+  top: 44px;
+  box-sizing: border-box;
+}
+
+/* ── product name ─────────────────────────────────────── */
+.popup__name {
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  margin: 0 0 10px;
+  color: #222;
+}
+
+/* ── info row (stock / buy / price / exp) ─────────────── */
+.popup__info {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.popup__info-cell {
+  border: 0.5px solid #ddd;
+  border-radius: 8px;
+  padding: 6px 4px;
+  text-align: center;
+}
+
+.cell-select {
+  cursor: pointer;
+}
+
+.active {
+  border: 2px solid #1D9E75;
+}
+
+.popup__info-label {
+  font-size: 10px;
+  color: #888;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.popup__info-value {
+  font-weight: 500;
+  color: #222;
+  font-size: 16px;
+}
+
+/* ── body (image + numpad) ────────────────────────────── */
+.popup__body {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: stretch;
+}
+
+/* ── product image ────────────────────────────────────── */
+.popup__image {
+  flex: 0 0 150px;
+  width: 150px;
+  height: auto;
+  max-height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 0.5px solid #ddd;
+  display: block;
+}
+
+/* ── numpad ───────────────────────────────────────────── */
+.popup__numpad {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.popup__key {
+  border: 0.5px solid #ccc;
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  font-size: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  color: #222;
+  transition: background 0.1s;
+  text-align: center;
+}
+
+.popup__key:hover {
+  background: #f5f5f5;
+}
+
+.popup__key:active {
+  opacity: 0.7;
+  transform: scale(0.96);
+}
+
+.popup__key--selected {
+  background: #E1F5EE;
+  border-color: #1D9E75;
+  color: #0F6E56;
+}
+
+/* ── action row (clear / 0 / update) ─────────────────── */
+.popup__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 4px;
+}
+
+.popup__action {
+  border: 0.5px solid #ccc;
+  background: #ffdede;
+  border-radius: 8px;
+  padding: 7px 4px;
+  font-size: 16px;
+  cursor: pointer;
+  color: #222;
+  text-align: center;
+  transition: background 0.1s;
+}
+
+.popup__action:hover {
+  background: #daa6a6;
+}
+
+.popup__action--confirm {
+  border-color: #1D9E75;
+  background: #E1F5EE;
+  color: #0F6E56;
+  font-weight: 500;
+}
+
+.popup__action--confirm:hover {
+  background: #c5ead8;
+}
+
+/* ── status message ───────────────────────────────────── */
+.popup__status {
+  margin-top: 8px;
+  font-size: 16px;
+  color: #f00;
+  text-align: center;
+  min-height: 16px;
+}
+
+/* ── close button ─────────────────────────────────────── */
+.popup__close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #aaa;
+  line-height: 1;
+  padding: 0;
+}
+
+.popup__close:hover {
+  color: #555;
+}
+
+/* input */
+.input-wrap {
+  display: flex;
+  align-items: center;
+  border: 0.5px solid #ccc;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 0.15s;
+  margin-bottom: 10px;
+}
+
+.input-wrap:focus-within {
+  border: 2px solid #1D9E75;
+  /* teal highlight on focus, matches popup style */
+}
+
+.input-wrap .input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 15px 10px;
+  font-size: 20px;
+  background-color: #ffffe7;
+  font-weight: 500;
+  width: 80px;
+  text-align: center;
+  min-height: 23px;
+}
