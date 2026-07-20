@@ -13,12 +13,16 @@ export function createStickerElement({ setting }) {
       e.target.classList.contains(".ingredientsTable") ||
       element.querySelector(".ingredientsTable").contains(e.target)
     ) {
-      element.print();
+      element.print({ rotate: 1 });
     }
   });
   const render = ({ product, variation, sku }) => {
-    const m = setting.Bakery_Goodies ? setting.Bakery_Goodies.replace('M', '') : 0;
-    const expdate = !isNaN(m) ? moment().add(m, 'month').format('YYYY-MM-DD') : 'none';
+    const m = setting.Bakery_Goodies
+      ? setting.Bakery_Goodies.replace("M", "")
+      : 0;
+    const expdate = !isNaN(m)
+      ? moment().add(m, "month").format("YYYY-MM-DD")
+      : "none";
     element.innerHTML = /* HTML */ ` <div
       class="ingredientsTable cursor-pointer"
       style="background: #FFF; border: 2px solid; text-align: center; width: 300px; padding: 0px 6px; margin: auto;"
@@ -119,7 +123,7 @@ export function createStickerElement({ setting }) {
       console.log(e);
     }
   };
-  element.print = (config = {}) => {
+  element.print = (config = {}, checkInput = undefined) => {
     let form = createPrintIngredientsForm();
     form = $(form);
     let { product, variation, sku } = state;
@@ -149,12 +153,16 @@ export function createStickerElement({ setting }) {
     form
       .find("input[name=StockLocation]")
       .val(regex.test(variation.StockLocation) ? variation.StockLocation : "");
-    form.find("[name=product_ingredients]").val(product.Ingredients);
-    if (variation.Check?.Usage) {
-      form.find("[name=product_usage]").val(product.Usage);
-      form.find("[name=print_product_usage_row]").val(1);
-      form.find("[name=print_product_usage]").val(1);
-      form.find("[name=print_product_usage_title]").val(1);
+    if (checkInput !== undefined) {
+      doCheck(form, checkInput, product);
+    } else {
+      form.find("[name=product_ingredients]").val(product.Ingredients);
+      if (variation.Check?.Usage) {
+        form.find("[name=product_usage]").val(product.Usage);
+        form.find("[name=print_product_usage_row]").val(1);
+        form.find("[name=print_product_usage]").val(1);
+        form.find("[name=print_product_usage_title]").val(1);
+      }
     }
     form.submit();
   };
@@ -163,7 +171,7 @@ export function createStickerElement({ setting }) {
 
 function createPrintIngredientsForm() {
   // Avoid creating duplicates
-  const existing = document.getElementById("printIngredientsTableFrm");
+  const existing = document.getElementById("printRotateStickerForm");
   if (existing) return existing;
 
   const fields = {
@@ -208,7 +216,7 @@ function createPrintIngredientsForm() {
     ingredients_font_size: "13",
     ingredients_width: "2",
     ingredients_font_family: "Arial",
-    config: "[]"
+    config: "[]",
   };
 
   const form = document.createElement("form");
@@ -243,4 +251,47 @@ function submitPrintIngredientsForm(values = {}) {
   const form = createPrintIngredientsForm();
   setPrintIngredientsFormValues(form, values);
   form.submit();
+}
+
+function doCheck(form, check, product) {
+  if (check.Serving) {
+    let serving = self.productHelper.getServing(product);
+    form.find("[name=serving]").val(serving);
+    form.find("[name=print_product_serving_title]").val(1);
+    form.find("[name=print_product_serving]").val(1);
+    form.find("[name=print_product_content_row]").val(1);
+  } else {
+    form.find("[name=print_product_serving_title]").val(0);
+    form.find("[name=print_product_serving]").val(0);
+    form.find("[name=print_product_content_row]").val(0);
+  }
+  if (check.Title) {
+    form.find("[name=print_product_name_row]").val(1);
+    form.find("[name=print_product_name]").val(1);
+    form.find("[name=print_product_specification]").val(1);
+  } else {
+    form.find("[name=print_product_name_row]").val(0);
+    form.find("[name=print_product_name]").val(0);
+    form.find("[name=print_product_specification]").val(0);
+  }
+  if (check.Usage) {
+    form.find("[name=print_product_serving_row]").val(1);
+    form.find("[name=print_product_usage_title]").val(1);
+    form.find("[name=print_product_usage]").val(1);
+    form.find("[name=product_usage]").val(product.Usage);
+  } else {
+    form.find("[name=print_product_serving_row]").val(0);
+    form.find("[name=print_product_usage_title]").val(0);
+    form.find("[name=print_product_usage]").val(0);
+  }
+  if (check.Ingredient) {
+    form.find("[name=product_ingredients]").val(product.Ingredients);
+    form.find("[name=print_product_usage_row]").val(1);
+    form.find("[name=print_product_ingredients_title]").val(1);
+    form.find("[name=print_product_ingredients]").val(1);
+  } else {
+    form.find("[name=print_product_usage_row]").val(0);
+    form.find("[name=print_product_ingredients_title]").val(0);
+    form.find("[name=print_product_ingredients]").val(0);
+  }
 }

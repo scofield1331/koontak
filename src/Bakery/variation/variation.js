@@ -218,9 +218,6 @@ export function createVariationElement({
           <div class="col-auto">
             <div class="sticker"></div>
           </div>
-          <div class="col-auto">
-            <button class="rotate">rotate</button>
-          </div>
         </div>
         <div class="mt-2 label col-md-6"></div>
       </div>
@@ -264,9 +261,6 @@ export function createVariationElement({
   //event
   promoTagWrapper.addEventListener("click", (e) => {
     promoTagWrapper.print();
-  });
-  element.querySelector(".rotate").addEventListener("click", (e) => {
-    sticker.print({ rotate: 1, width: "2in" });
   });
   //method
   const toSku = (skuObj) => {
