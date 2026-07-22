@@ -227,7 +227,7 @@ export class Page {
       steps: this.steps,
       recipes: this.recipes,
       source: this.source,
-      setting: this.setting
+      setting: this.setting,
     });
     this.config = new JsonConfigEditor({
       target: "#setting",
@@ -240,18 +240,23 @@ export class Page {
     });
   }
   async handleCostChange({ totalCost, sku }) {
-    const markup = Math.round(totalCost * 100) / 100;
-    const updateData = {
-      Retail: {
-        [sku]: {
-          Markup: markup,
-          UnitPrice: "retail",
-        },
-      },
-    };
+    const cost = Math.round(totalCost * 100) / 100;
+    const calculator = registry.get("calculator");
+    const supplier = calculator.pickSupplier(this.product);
+    if (!supplier) {
+      alert('supplier not found');
+      throw new Error("supplier not found");
+    }
+    supplier.Cost = cost;
+    const updateData = {};
+    if (this.product.SuppliersPricing.length) {
+      updateData.SuppliersPricing = this.product.SuppliersPricing;
+    } else {
+      updateData.Suppliers = this.product.Suppliers;
+    }
     let rs = await this.updateLog.update(updateData, this.product, 0);
     if (rs.success) {
-      this.retailForm.updateTotalCost(markup);
+      this.retailForm.updateTotalCost(cost);
     } else {
       alert(rs.error);
     }
@@ -259,8 +264,14 @@ export class Page {
   }
   handleSaveVariation({ oldSku, newSku, key, value, state }) {
     let updateData = {};
-    const isCostChanged = state.totalCost != state.variation?.Markup;
-    const markup = Math.round(state.totalCost * 100) / 100;
+    const calculator = registry.get("calculator");
+    const supplier = calculator.pickSupplier(this.product);
+    if (!supplier) {
+      alert('supplier not found');
+      throw new Error("supplier not found");
+    }
+    const isCostChanged = state.totalCost != supplier?.Cost;
+    const cost = Math.round(state.totalCost * 100) / 100;
     if (this.product) {
       if (this.product.Retail[oldSku]) {
         let variation = structuredClone(this.product.Retail[oldSku]);
@@ -270,16 +281,17 @@ export class Page {
         this.product.Retail[newSku] = new Variation().get();
       }
       if (isCostChanged) {
-        this.product.Retail[newSku].Markup = markup;
+        supplier.Cost = cost;
       }
       updateData.Retail = this.product.Retail;
       if (key == "step3") {
         const match = matchSizeUnit(value);
         if (match) {
-          updateData.Retail[newSku].RetailSize = match[1];
-          updateData.Retail[newSku].RetailUnit = match[2];
+          supplier.SupplierSize = match[1];
+          supplier.SupplierUnit = match[2];
         } else {
-          updateData.Retail[newSku].RetailUnit = value;
+          supplier.SupplierSize = "1";
+          supplier.SupplierUnit = "lb";
         }
       } else {
         let keys = [
@@ -307,6 +319,11 @@ export class Page {
           );
         updateData.Ingredients = ingredients.join(", ");
       }
+      if (this.product.SuppliersPricing.length) {
+        updateData.SuppliersPricing = this.product.SuppliersPricing;
+      } else {
+        updateData.Suppliers = this.product.Suppliers;
+      }
       return new Promise((resolve) => {
         this.updateLog.update(updateData, this.product, 1).then((rs) => {
           if (rs.success) {
@@ -317,7 +334,7 @@ export class Page {
               rs.Ingredients = updateData.Ingredients;
             }
             if (isCostChanged) {
-              this.retailForm.updateTotalCost(markup);
+              this.retailForm.updateTotalCost(cost);
             }
             this.handleVariationChange();
           } else {

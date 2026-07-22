@@ -16,34 +16,13 @@ export class RetailForm {
     this.default = false;
     this.initEvent();
   }
-  //   updateSuppliersPricingCost(totalCost) {
-  //     clearTimeout(timer);
-  //     timer = setTimeout(() => {
-  //       $.ajax({
-  //         method: "POST",
-  //         dataType: "json",
-  //         url: "./dispatcher.php?action=updateSupplierPricingCost",
-  //         contentType: "application/json",
-  //         data: JSON.stringify({
-  //           product: this.inventoryItem.Product,
-  //           cost: totalCost,
-  //         }),
-  //       }).then((rs) => {
-  //         if (rs.success) {
-  //           this.inventoryItem.SuppliersPricing = rs.SuppliersPricing;
-  //         } else {
-  //           alert(rs.error);
-  //         }
-  //       });
-  //     }, 300);
-  //   }
   updateTotalCost(totalCost) {
     Object.values(this.rows).forEach((row) => {
-      row.variation.Markup = totalCost;
-      row.updateMarkup();
+      row.updateCost();
       row.updateTooltip();
       row.updatePercent();
       row.updateRetailPrice();
+      row.updateShopPrice();
       row.updateRetailer();
       row.updateProfit();
     });
@@ -87,6 +66,10 @@ export class RetailForm {
   }
   setProduct(inventoryItem) {
     this.inventoryItem = inventoryItem;
+    this.supplier = this.cal.pickSupplier(this.inventoryItem);
+    if (!this.supplier) {
+      alert('supplier not found');
+    }
   }
   load() {
     this.leftTable.empty();
@@ -213,6 +196,7 @@ class Variation {
     this.variation.RetailUnitPrice = PERCENT_MARKUP;
     this.tempVariation = Object.assign(this.tempVariation, this.variation);
     this.updateRetailPrice();
+    this.updateShopPrice();
     this.updateRetailer();
     this.updateProfit();
   }
@@ -224,23 +208,25 @@ class Variation {
     this.tempVariation = Object.assign(this.tempVariation, this.variation);
     this.updatePercent();
     this.updateProfit();
+    this.updateShopPrice();
     this.updateRetailer();
   }
   onProfitInput(e) {
     let profit = $(e.target).val();
     this.profit = isNaN(profit) ? 0 : Number(profit);
-    this.retailPrice = this.profit + this.variation.Markup;
-    this.percent =
-      ((this.retailPrice - this.variation.Markup) / this.variation.Markup) *
-      100;
+    const cost = Number(this.retailForm.supplier.Cost);
+    this.retailPrice = this.profit + cost;
+    this.percent = ((this.retailPrice - cost) / cost) * 100;
     this.rowRight.find(".retail").val(this.retailPrice.toFixed(2));
     this.rowLeft.find(".percent").val(this.percent.toFixed(2));
+    this.updateShopPrice();
     this.updateRetailer();
   }
   onShipweightInput(e) {
     let shipweight = $(e.target).val();
     this.shipweight = isNaN(shipweight) ? 0 : Number(shipweight);
     this.variation.ShipWeight = shipweight;
+    this.updateShopPrice();
     this.updateRetailer();
   }
   onDataChange() {
@@ -278,8 +264,8 @@ class Variation {
           ? /* HTML */ ` <div>formula: percent = RetailMarkup</div> `
           : this.variation.RetailUnitPrice == FIX_PRICE
             ? /* HTML */ `
-                <div>Markup: ${variation.Markup}</div>
-                formula: (RetailMarkup - Markup)/Markup
+                <div>cost: ${this.retailForm.supplier.Cost}</div>
+                formula: (RetailMarkup - cost)/cost
               `
             : `undefined`}
       `);
@@ -291,10 +277,10 @@ class Variation {
       .html(/* HTML */ `
         <div>RetailUnitPrice: ${variation.RetailUnitPrice}</div>
         <div>RetailMarkup: ${variation.RetailMarkup}</div>
-        <div>Markup: ${variation.Markup}</div>
+        <div>cost: ${this.retailForm.supplier?.Cost}</div>
         ${this.variation.RetailUnitPrice == PERCENT_MARKUP
           ? /* HTML */ `
-              <div>formula: retail = Markup / (1 - RetailMarkup / 100)</div>
+              <div>formula: retail = cost / (1 - RetailMarkup / 100)</div>
             `
           : this.variation.RetailUnitPrice == FIX_PRICE
             ? /* HTML */ ` formula: retail = RetailMarkup `
@@ -309,32 +295,40 @@ class Variation {
     let retail = this.getRetail();
     this.rowRight.find(".retail").val(retail.toFixed(2));
   }
+  updateShopPrice() {
+    let retail = this.tempVariation;
+    let product = this.product;
+    let cal = this.retailForm.cal;
+    let shopPrice = cal
+      .calculateRetailUniversal(
+        product,
+        retail,
+        "bodishop"
+      )
+      .toFixed(2);
+    this.rowRight.find(".shopprice").val(shopPrice);
+  }
   updateRetailer() {
     let retail = this.tempVariation;
     let product = this.product;
     let cal = this.retailForm.cal;
-    let bodiRetailNutrition = this.retailForm.totalCost;
-    if (retail.UnitPrice == FIX_PRICE) {
-      bodiRetailNutrition = Number(retail.Markup);
-    }
     let retailPrice = cal
       .calculateRetailUniversal(
         product,
         retail,
-        "bodiretailer",
-        bodiRetailNutrition,
+        "bodiretailer"
       )
       .toFixed(2);
     this.rowRight.find(".retailer").val(retailPrice);
   }
   updateProfit() {
-    if (this.retailForm.totalCost !== undefined) {
-      this.profit = this.retailPrice - this.retailForm.totalCost;
+    if (this.retailForm.supplier?.Cost !== undefined) {
+      this.profit = this.retailPrice - this.retailForm.supplier?.Cost;
     }
     this.rowLeft.find(".profit").val(this.profit.toFixed(2));
   }
-  updateMarkup() {
-    this.rowLeft.find(".total-cost").html(this.variation.Markup);
+  updateCost() {
+    this.rowLeft.find(".total-cost").html(this.retailForm.supplier?.Cost ?? 0);
   }
 
   getRowLeft() {
@@ -350,41 +344,44 @@ class Variation {
     this.rowLeft
       .find(".name")
       .html(retail.RetailSize + " " + retail.RetailUnit);
-    this.rowLeft.find(".total-cost").html(retail.Markup);
+    this.rowLeft.find(".total-cost").html(this.retailForm.supplier?.Cost ?? 0);
     this.rowRight.attr("index", this.index);
     this.rowRight.find(".shipweight").val(retail.ShipWeight);
     this.updateTooltip();
     this.updatePercent();
     this.updateRetailPrice();
+    this.updateShopPrice();
     this.updateRetailer();
     this.updateProfit();
   }
 
   getPercent() {
     let variation = this.variation;
+    const supplier = this.retailForm.supplier;
     let percent = 0;
     if (variation.RetailUnitPrice == PERCENT_MARKUP) {
       percent = isNaN(variation.RetailMarkup)
         ? 0
         : Number(variation.RetailMarkup);
     } else if (variation.RetailUnitPrice == FIX_PRICE) {
-      if (!variation.Markup) return 0;
+      if (!supplier.Cost) return 0;
       let retailPrice = variation.RetailMarkup;
-      percent = ((retailPrice - variation.Markup) / variation.Markup) * 100;
+      percent = ((retailPrice - supplier.Cost) / supplier.Cost) * 100;
     }
     this.percent = percent;
     return percent;
   }
   getRetail() {
     let variation = this.variation;
+    let supplier = this.retailForm.supplier;
     let retail = 0;
     if (variation.RetailUnitPrice == PERCENT_MARKUP) {
       let markup = isNaN(variation.RetailMarkup)
         ? 0
         : Number(variation.RetailMarkup);
-      if (!variation.Markup) return 0;
+      if (!supplier.Cost) return 0;
       if (markup == 100) markup = 0;
-      retail = variation.Markup / (1 - markup / 100);
+      retail = supplier.Cost / (1 - markup / 100);
     } else if (variation.RetailUnitPrice == FIX_PRICE) {
       retail = isNaN(variation.RetailMarkup)
         ? 0
@@ -410,6 +407,7 @@ function createElement() {
         <table class="table ammount-list right border-start-0">
           <thead>
             <th>Retail</th>
+            <th>Shop price</th>
             <th>shipweight</th>
             <th>Online price</th>
           </thead>
@@ -463,6 +461,15 @@ function createElement() {
                 />
                 <span class="tooltip-text"></span>
               </div>
+              $
+            </div>
+          </td>
+          <td>
+            <div class="d-flex align-items-center gap-1">
+              <input
+                type="number"
+                class="shopprice form-control d-inline no-update"
+              />
               $
             </div>
           </td>

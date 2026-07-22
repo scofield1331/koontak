@@ -16,6 +16,7 @@ exports.common = {
     // 'setting/setting': path.resolve(__dirname, './src/setting/index.js'),
     // 'Accounting/expense': path.resolve(__dirname, './src/Accounting/expense/index.js'),
     "Bakery/index": path.resolve(__dirname, "./src/Bakery/index.js"),
+    // "production/production": path.resolve(__dirname, "./src/production/index.js"),
     // "Recipes/recipe": path.resolve(__dirname, "./src/Recipes/index.js"),
   },
   output: {

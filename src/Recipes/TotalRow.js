@@ -13,7 +13,7 @@ export function createTotalRowElement(props) {
         ><span class="unit-gr">${Math.round(weight*100)/100}</span></span
       >
     </div>
-    <div class="StepQuantityTotal">${(Math.round(serving*100)/100).toFixed(3)}</div>
+    <div class="StepQuantityTotal">${(Math.round(serving*1000)/1000).toFixed(3)}</div>
     <div class="Total">
     </div>
     <div class="ItemCost">$${Math.round(cost*100)/100}</div>
