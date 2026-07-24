@@ -1,4 +1,4 @@
-var timer;
+let timer;
 export class RetailForm {
   constructor(inventoryItem = null, options = null) {
     if (options) {
@@ -68,7 +68,9 @@ export class RetailForm {
     this.inventoryItem = inventoryItem;
     this.supplier = this.cal.pickSupplier(this.inventoryItem);
     if (!this.supplier) {
-      alert('supplier not found');
+      this.element.find(".message").html("supplier not found");
+    } else {
+      this.element.find(".message").html("");
     }
   }
   load() {
@@ -187,6 +189,7 @@ class Variation {
     this.rowRight.on("input", ".retail", (e) => this.onRetailPriceInput(e));
     this.rowRight.on("change", ".retail", (e) => this.onDataChange());
     this.rowLeft.on("input", ".profit", (e) => this.onProfitInput(e));
+    this.rowLeft.on("change", ".profit", (e) => this.onDataChange());
     this.rowRight.on("input", ".shipweight", (e) => this.onShipweightInput(e));
     this.rowRight.on("change", ".shipweight", (e) => this.onDataChange(e));
   }
@@ -194,7 +197,6 @@ class Variation {
     let markup = $(e.target).val();
     this.variation.RetailMarkup = markup;
     this.variation.RetailUnitPrice = PERCENT_MARKUP;
-    this.tempVariation = Object.assign(this.tempVariation, this.variation);
     this.updateRetailPrice();
     this.updateShopPrice();
     this.updateRetailer();
@@ -205,7 +207,6 @@ class Variation {
     this.retailPrice = isNaN(retailPrice) ? 0 : Number(retailPrice);
     this.variation.RetailMarkup = retailPrice;
     this.variation.RetailUnitPrice = FIX_PRICE;
-    this.tempVariation = Object.assign(this.tempVariation, this.variation);
     this.updatePercent();
     this.updateProfit();
     this.updateShopPrice();
@@ -216,7 +217,9 @@ class Variation {
     this.profit = isNaN(profit) ? 0 : Number(profit);
     const cost = Number(this.retailForm.supplier.Cost);
     this.retailPrice = this.profit + cost;
-    this.percent = ((this.retailPrice - cost) / cost) * 100;
+    this.percent = ((this.retailPrice - cost) / this.retailPrice) * 100;
+    this.variation.RetailMarkup = this.retailPrice;
+    this.variation.RetailUnitPrice = FIX_PRICE;
     this.rowRight.find(".retail").val(this.retailPrice.toFixed(2));
     this.rowLeft.find(".percent").val(this.percent.toFixed(2));
     this.updateShopPrice();
@@ -229,7 +232,7 @@ class Variation {
     this.updateShopPrice();
     this.updateRetailer();
   }
-  onDataChange() {
+  saveJson() {
     let change = this.retailForm.page.updateLog.getChange(
       `Retail[${this.index}]`,
       this.variation,
@@ -251,6 +254,10 @@ class Variation {
     this.updateTooltip();
     this.retailForm.page.handleVariationChange();
   }
+  onDataChange() {
+    clearTimeout(timer);
+    timer = setTimeout(this.saveJson.bind(this), 300);
+  }
   updateTooltip() {
     const variation = this.variation;
     this.rowLeft
@@ -265,7 +272,7 @@ class Variation {
           : this.variation.RetailUnitPrice == FIX_PRICE
             ? /* HTML */ `
                 <div>cost: ${this.retailForm.supplier.Cost}</div>
-                formula: (RetailMarkup - cost)/cost
+                formula: (RetailMarkup - cost)/RetailMarkup
               `
             : `undefined`}
       `);
@@ -296,28 +303,20 @@ class Variation {
     this.rowRight.find(".retail").val(retail.toFixed(2));
   }
   updateShopPrice() {
-    let retail = this.tempVariation;
+    let retail = this.variation;
     let product = this.product;
     let cal = this.retailForm.cal;
     let shopPrice = cal
-      .calculateRetailUniversal(
-        product,
-        retail,
-        "bodishop"
-      )
+      .calculateRetailUniversal(product, retail, "bodishop")
       .toFixed(2);
     this.rowRight.find(".shopprice").val(shopPrice);
   }
   updateRetailer() {
-    let retail = this.tempVariation;
+    let retail = this.variation;
     let product = this.product;
     let cal = this.retailForm.cal;
     let retailPrice = cal
-      .calculateRetailUniversal(
-        product,
-        retail,
-        "bodiretailer"
-      )
+      .calculateRetailUniversal(product, retail, "bodiretailer")
       .toFixed(2);
     this.rowRight.find(".retailer").val(retailPrice);
   }
@@ -366,7 +365,7 @@ class Variation {
     } else if (variation.RetailUnitPrice == FIX_PRICE) {
       if (!supplier.Cost) return 0;
       let retailPrice = variation.RetailMarkup;
-      percent = ((retailPrice - supplier.Cost) / supplier.Cost) * 100;
+      percent = ((retailPrice - supplier.Cost) / retailPrice) * 100;
     }
     this.percent = percent;
     return percent;
