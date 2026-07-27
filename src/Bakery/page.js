@@ -11,8 +11,10 @@ import { createRightElement } from "./right/right";
 import { createnewProductModal } from "./left/modal";
 import { JsonConfigEditor } from "./setting";
 import { registry } from "@/service/Registry";
+import { renameKeyKeepPositionAndRef } from "@/service/Object";
 import "./css/sticker.css";
 import "./css/page.css";
+import "./css/create-variation.css";
 import { matchSizeUnit, findProduct } from "./variation/Utils";
 
 // const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -228,6 +230,7 @@ export class Page {
       recipes: this.recipes,
       source: this.source,
       setting: this.setting,
+      handleSizeChange: this.handleSizeChange.bind(this),
     });
     this.config = new JsonConfigEditor({
       target: "#setting",
@@ -240,11 +243,12 @@ export class Page {
     });
   }
   async handleCostChange({ totalCost, sku }) {
+    console.log('cost chagne', totalCost, sku);
     const cost = Math.round(totalCost * 100) / 100;
     const calculator = registry.get("calculator");
     const supplier = calculator.pickSupplier(this.product);
     if (!supplier) {
-      alert('supplier not found');
+      alert("supplier not found");
       throw new Error("supplier not found");
     }
     supplier.Cost = cost;
@@ -267,38 +271,19 @@ export class Page {
     const calculator = registry.get("calculator");
     const supplier = calculator.pickSupplier(this.product);
     if (!supplier) {
-      alert('supplier not found');
+      alert("supplier not found");
       throw new Error("supplier not found");
     }
     const isCostChanged = state.totalCost != supplier?.Cost;
     const cost = Math.round(state.totalCost * 100) / 100;
     if (this.product) {
-      if (this.product.Retail[oldSku]) {
-        let variation = structuredClone(this.product.Retail[oldSku]);
-        delete this.product.Retail[oldSku];
-        this.product.Retail[newSku] = variation;
-      } else {
-        this.product.Retail[newSku] = new Variation().get();
-      }
+      renameKeyKeepPositionAndRef(this.product.Retail, oldSku, newSku);
       if (isCostChanged) {
         supplier.Cost = cost;
       }
       updateData.Retail = this.product.Retail;
-      if (key == "step3") {
-        const match = matchSizeUnit(value);
-        if (match) {
-          supplier.SupplierSize = match[1];
-          supplier.SupplierUnit = match[2];
-        } else {
-          supplier.SupplierSize = "1";
-          supplier.SupplierUnit = "lb";
-        }
-      } else {
-        let keys = [
-          "step1",
-          "step2",
-          ...this.variationCreate.getDynamicSteps(),
-        ];
+      let keys = ["step1", "step2", ...this.variationCreate.getDynamicSteps()];
+      if (keys.includes(key)) {
         let ingredients = keys
           .map((key) => {
             const name = findLabel(this.steps, key, state[key] ?? 0);
@@ -344,6 +329,16 @@ export class Page {
         });
       });
     }
+  }
+  handleSizeChange({ size, unit }) {
+    const calculator = registry.get("calculator");
+    const supplier = calculator.pickSupplier(this.product);
+    if (!supplier) {
+      alert("supplier not found");
+      throw new Error("supplier not found");
+    }
+    supplier.SupplierSize = size;
+    supplier.SupplierUnit = unit;
   }
   handleVariationChange() {
     this.variationCreate.updateLabel();

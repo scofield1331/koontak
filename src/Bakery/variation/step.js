@@ -233,22 +233,8 @@ export function createStep3Element({
   `;
   // event
   element.querySelector("select").addEventListener("change", (e) => {
-    updateWeight(e.target.value);
     handleSelect(e);
   });
-
-  // method
-  const updateWeight = (string) => {
-    let match = matchSizeUnit(string ?? "");
-    let togr;
-    if (match) {
-      let converter = registry.get("converter");
-      togr = Math.round(converter.convertStockValue(match[1], match[2], "gr"));
-    } else {
-      togr = 0;
-    }
-    handleWeightChange(togr);
-  };
 
   element.fillValue = ({ value, handleFill }) => {
     let newValue;
@@ -259,7 +245,6 @@ export function createStep3Element({
       newValue = "0";
       element.querySelector(`.message`).innerHTML = `${value ?? ''} not found`;
     }
-    updateWeight(value);
     element.querySelector("select").value = newValue;
     handleFill({ key, value: newValue });
   };

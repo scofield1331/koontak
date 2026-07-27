@@ -24,5 +24,5 @@ export function findProduct(value, products) {
 }
 
 export function matchSizeUnit(value) {
-  return value.match(/(\d+)(.*)$/);
+  return value.match(/(\d+)([a-zA-Z]+)$/);
 }

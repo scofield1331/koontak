@@ -1,7 +1,10 @@
 import { createPromoTagWrapper } from "@/Bodi/Shop/Label/PromoTagWrapper";
 import { createStickerElement } from "./sticker";
 import { Variation } from "@/Object/Variation";
-import { createStepElement, createStep3Element } from "./step";
+import { createStepElement } from "./step";
+import { createSizeStepElement } from "./size";
+import { registry } from "@/service/Registry";
+import { createShapeStepElement } from "./shape";
 
 // reducer
 const stateReducer = (state, action) => {
@@ -25,6 +28,7 @@ export function createVariationElement({
   source,
   handleSaveVariation,
   handleCostChange,
+  handleSizeChange,
 }) {
   const staticSteps = ["step1", "step2", "step3"];
   const dynamicSteps = Object.keys(steps).filter(
@@ -43,6 +47,22 @@ export function createVariationElement({
   dynamicSteps.forEach((key) => (defaultState[key] = 0));
   let state = { ...defaultState, steps };
   //handle
+  const handleVariaztionSizeChange = (props) => {
+    handleSizeChange(props);
+    buildOutput();
+    saveSkuChange({
+      key: "size",
+      value: sizeStepEl.get(),
+    });
+  };
+  const handleShapeChange = (shape) => {
+    state = stateReducer(state, { type: "changeStep", payload: shape, key: 'step3' });
+    buildOutput();
+    saveSkuChange({
+      key: "step3",
+      value: shape,
+    });
+  };
   const handleSelect = (e) => {
     const name = e.target.getAttribute("data-name");
     let messageEl = e.target.closest(".step").querySelector(".message");
@@ -57,7 +77,8 @@ export function createVariationElement({
     });
   };
   const saveCostChange = async () => {
-    if (state.totalCost != state.variation?.Markup) {
+    console.log("change", state.totalCost, state.supplier?.Cost);
+    if (state.totalCost != state.supplier?.Cost) {
       element.querySelector(".actions .message").innerHTML = /* HTML */ `
         <div class="spinner-border" role="status">
           <span class="sr-only"></span>
@@ -140,7 +161,7 @@ export function createVariationElement({
   //method
   const getState = () => state;
   const createSteps = ({ steps }) => {
-    return Object.keys(steps).map((key) => {
+    return Object.keys(steps).filter(key => key != 'step3').map((key) => {
       let props = {
         step: steps[key],
         key,
@@ -149,12 +170,9 @@ export function createVariationElement({
         dynamicSteps,
         handleSelect,
         handlePercentChange,
-        handleWeightChange,
         getState,
       };
-      return key == "step3"
-        ? createStep3Element(props)
-        : createStepElement(props);
+      return createStepElement(props);
     });
   };
   const createWrapperElement = ({ steps }) => {
@@ -173,6 +191,10 @@ export function createVariationElement({
             </div>
           </div>
         </div>
+      </div>
+      <div class="container-fluid">
+        <template id="size-step"></template>
+        <template id="shape-step"></template>
       </div>
       <div class="container-fluid">
         <div class="row">
@@ -251,6 +273,16 @@ export function createVariationElement({
   const element = document.getElementById("create-variation");
   const [html] = createWrapperElement({ steps });
   element.append(html);
+  const sizeStepEl = createSizeStepElement({
+    handleSizeChange: handleVariaztionSizeChange,
+    handleWeightChange,
+  });
+  const shapeStepEl = createShapeStepElement({
+    step: steps.step3,
+    handleShapeChange
+  });
+  element.querySelector("#size-step").replaceWith(sizeStepEl);
+  element.querySelector("#shape-step").replaceWith(shapeStepEl);
   const promoTagWrapper = createPromoTagWrapper({ page: "Bakery" });
   promoTagWrapper.classList.add("cursor-pointer");
   const sticker = createStickerElement({ setting });
@@ -271,7 +303,8 @@ export function createVariationElement({
           skuObj[key] !== undefined ? skuObj[key] : 0,
         ),
       );
-    return `Bake.${arr.join(".")}`.replace(/(\.0)*$/, "");
+    const size = sizeStepEl.get();
+    return `Bake.${size}.${arr.join(".")}`.replace(/(\.0)*$/, "");
   };
   const buildOutput = () => {
     let output = toSku(state);
@@ -279,6 +312,7 @@ export function createVariationElement({
   };
   const fillValues = (steps, obj) => {
     for (const [key, value] of Object.entries(obj)) {
+      if (key == 'step3') continue;
       element
         .querySelector(`.step.${key}`)
         .fillValue({ key, value, handleFill });
@@ -289,7 +323,7 @@ export function createVariationElement({
   const clean = () => {
     state = { ...state, ...defaultState };
     element.querySelectorAll("select").forEach((e) => (e.value = "0"));
-    element.querySelectorAll("input").forEach((e) => (e.value = ""));
+    element.querySelectorAll('input:not([type="radio"])').forEach((e) => (e.value = ""));
     element.querySelectorAll(".message").forEach((e) => (e.innerHTML = ""));
     element.querySelectorAll(".step-cost").forEach((e) => e.setPercent(0));
   };
@@ -307,17 +341,22 @@ export function createVariationElement({
       messageEl.innerHTML = msg;
       return;
     }
-    let key = ["cat", ...staticSteps, ...dynamicSteps];
+    let key = ["cat", "size", ...staticSteps, ...dynamicSteps];
     const splitedSku = sku.split(".");
     const skuObj = Object.fromEntries(
       key.map((key, i) => [key, splitedSku[i] ?? "0"]),
     );
     delete skuObj.cat;
+    sizeStepEl.setSize(skuObj.size);
+    delete skuObj.size;
+    shapeStepEl.setValue(skuObj.step3);
     fillValues(state.steps, skuObj);
   };
   element.set = (product) => {
     clean();
     const retail = product.Retail;
+    const calculator = registry.get("calculator");
+    state.supplier = calculator.pickSupplier(product);
     promoTagWrapper.clear();
     promoTagWrapper.add(product);
     if (typeof retail !== "object") {

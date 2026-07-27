@@ -1,0 +1,7 @@
+.shape-option__icon {
+  font-size: 35px;
+}
+.shape-option input:checked + .card {
+  background-color: #dff3df;
+  border-color: #343a40;
+}
