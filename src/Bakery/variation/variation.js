@@ -5,6 +5,7 @@ import { createStepElement } from "./step";
 import { createSizeStepElement } from "./size";
 import { registry } from "@/service/Registry";
 import { createShapeStepElement } from "./shape";
+import { createTypeStepElement } from "./type";
 
 // reducer
 const stateReducer = (state, action) => {
@@ -43,10 +44,20 @@ export function createVariationElement({
     totalWeight: 0,
     totalCost: 0,
     variation: false,
+    steps: [],
   };
   dynamicSteps.forEach((key) => (defaultState[key] = 0));
   let state = { ...defaultState, steps };
   //handle
+  const handleStepRemove = (step) => {
+    const index = state.stepEls.indexOf(step);
+    if (index !== -1) {
+      state.stepEls.splice(index, 1);
+      step.remove();
+    } else {
+      alert ("index not found, can't delete");
+    }
+  };
   const handleVariaztionSizeChange = (props) => {
     handleSizeChange(props);
     buildOutput();
@@ -56,7 +67,11 @@ export function createVariationElement({
     });
   };
   const handleShapeChange = (shape) => {
-    state = stateReducer(state, { type: "changeStep", payload: shape, key: 'step3' });
+    state = stateReducer(state, {
+      type: "changeStep",
+      payload: shape,
+      key: "step3",
+    });
     buildOutput();
     saveSkuChange({
       key: "step3",
@@ -139,6 +154,18 @@ export function createVariationElement({
     updateCost();
     saveCostChange();
   };
+  const handleWeightChange = (weight) => {
+    state = stateReducer(state, {
+      type: "updateWeight",
+      payload: weight,
+    });
+    updateWeight();
+  };
+  //method
+  const updateSteps = () => {
+    element.querySelector(".steps").innerHTML = "";
+    element.querySelector(".steps").append(...state.stepEls);
+  };
   const calculateCost = () => {
     let totalCost = Array.from(element.querySelectorAll(".step-cost")).reduce(
       (total, step) => {
@@ -151,30 +178,7 @@ export function createVariationElement({
       payload: totalCost,
     });
   };
-  const handleWeightChange = (weight) => {
-    state = stateReducer(state, {
-      type: "updateWeight",
-      payload: weight,
-    });
-    updateWeight();
-  };
-  //method
   const getState = () => state;
-  const createSteps = ({ steps }) => {
-    return Object.keys(steps).filter(key => key != 'step3').map((key) => {
-      let props = {
-        step: steps[key],
-        key,
-        recipes,
-        source: source[steps[key].source] ?? [],
-        dynamicSteps,
-        handleSelect,
-        handlePercentChange,
-        getState,
-      };
-      return createStepElement(props);
-    });
-  };
   const createWrapperElement = ({ steps }) => {
     const element = document.createElement("div");
     element.innerHTML = /* HTML */ `
@@ -212,8 +216,9 @@ export function createVariationElement({
           </div>
         </div>
       </div>
+      <template id="type-step"></template>
       <div class="container-fluid py-3 steps"></div>
-
+      <template id="add-item"></template>
       <hr class="my-3" />
 
       <div class="row align-items-center">
@@ -244,7 +249,6 @@ export function createVariationElement({
         <div class="mt-2 label col-md-6"></div>
       </div>
     `;
-    element.querySelector(".steps").append(...createSteps({ steps }));
     return [element];
   };
   const updateCost = async () => {
@@ -269,7 +273,7 @@ export function createVariationElement({
       step.updateCost();
     });
   };
-
+  //element
   const element = document.getElementById("create-variation");
   const [html] = createWrapperElement({ steps });
   element.append(html);
@@ -279,10 +283,22 @@ export function createVariationElement({
   });
   const shapeStepEl = createShapeStepElement({
     step: steps.step3,
-    handleShapeChange
+    handleShapeChange,
   });
+  const typeStepEl = createTypeStepElement({
+    step: steps.step1,
+    key: "step1",
+    recipes,
+    handleSelect,
+    handlePercentChange,
+    getState,
+  });
+  const addItemBtn = createAddItemButton();
   element.querySelector("#size-step").replaceWith(sizeStepEl);
   element.querySelector("#shape-step").replaceWith(shapeStepEl);
+  element.querySelector("#type-step").replaceWith(typeStepEl);
+  element.querySelector("#add-item").replaceWith(addItemBtn);
+
   const promoTagWrapper = createPromoTagWrapper({ page: "Bakery" });
   promoTagWrapper.classList.add("cursor-pointer");
   const sticker = createStickerElement({ setting });
@@ -291,28 +307,54 @@ export function createVariationElement({
 
   const messageEl = element.querySelector(".output .message");
   //event
+  addItemBtn.addEventListener("click", (e) => {
+    const newStep = createStepElement({
+      steps,
+      value: "",
+      source,
+      dynamicSteps,
+      handleSelect,
+      handlePercentChange,
+      handleStepRemove,
+      getState,
+    });
+    state.stepEls.push(newStep);
+    element.querySelector(".steps").append(newStep);
+  });
   promoTagWrapper.addEventListener("click", (e) => {
     promoTagWrapper.print();
   });
   //method
   const toSku = (skuObj) => {
-    const arr = staticSteps
-      .map((key) => (skuObj[key] !== undefined ? skuObj[key] : 0))
-      .concat(
-        dynamicSteps.map((key) =>
-          skuObj[key] !== undefined ? skuObj[key] : 0,
-        ),
-      );
+    console.log("tosku");
     const size = sizeStepEl.get();
-    return `Bake.${size}.${arr.join(".")}`.replace(/(\.0)*$/, "");
+    const shape = shapeStepEl.get();
+    const type = typeStepEl.get();
+    const steps = state.stepEls.map(e => e.get()).filter(v => v.trim() != '');
+    return `Bake.${size}.${shape}.${type}.${steps.join('.')}`.replaceAll(".0", "");
   };
   const buildOutput = () => {
     let output = toSku(state);
     element.querySelector(".output input").value = output;
   };
+  const createDynamicSteps = ({ values }) => {
+    const stepEls = values.map((value) =>
+      createStepElement({
+        steps,
+        value,
+        source,
+        dynamicSteps,
+        handleSelect,
+        handlePercentChange,
+      handleStepRemove,
+        getState,
+      }),
+    );
+    return stepEls;
+  };
   const fillValues = (steps, obj) => {
     for (const [key, value] of Object.entries(obj)) {
-      if (key == 'step3') continue;
+      if (key == "step3") continue;
       element
         .querySelector(`.step.${key}`)
         .fillValue({ key, value, handleFill });
@@ -323,7 +365,9 @@ export function createVariationElement({
   const clean = () => {
     state = { ...state, ...defaultState };
     element.querySelectorAll("select").forEach((e) => (e.value = "0"));
-    element.querySelectorAll('input:not([type="radio"])').forEach((e) => (e.value = ""));
+    element
+      .querySelectorAll('input:not([type="radio"])')
+      .forEach((e) => (e.value = ""));
     element.querySelectorAll(".message").forEach((e) => (e.innerHTML = ""));
     element.querySelectorAll(".step-cost").forEach((e) => e.setPercent(0));
   };
@@ -341,16 +385,13 @@ export function createVariationElement({
       messageEl.innerHTML = msg;
       return;
     }
-    let key = ["cat", "size", ...staticSteps, ...dynamicSteps];
-    const splitedSku = sku.split(".");
-    const skuObj = Object.fromEntries(
-      key.map((key, i) => [key, splitedSku[i] ?? "0"]),
-    );
-    delete skuObj.cat;
-    sizeStepEl.setSize(skuObj.size);
-    delete skuObj.size;
-    shapeStepEl.setValue(skuObj.step3);
-    fillValues(state.steps, skuObj);
+    const [cat, size, shape, type, ...steps] = sku.split(".");
+    sizeStepEl.setSize(size);
+    shapeStepEl.setValue(shape);
+    typeStepEl.fillValue({ value: type, handleFill });
+    //state stepEls
+    state.stepEls = createDynamicSteps({ values: steps });
+    updateSteps();
   };
   element.set = (product) => {
     clean();
@@ -372,7 +413,7 @@ export function createVariationElement({
       sku = skus[0];
     } else {
       variation = new Variation();
-      sku = "Bake.0.0.0.0.0.0";
+      sku = "Bake.";
       product.Retail[sku] = variation.get();
     }
     state = stateReducer(state, {
@@ -389,7 +430,7 @@ export function createVariationElement({
   };
   element.setSteps = (steps) => {
     state.steps = steps;
-    let stepEls = createSteps({ steps });
+
     element.querySelector(".steps").innerHTML = "";
     element.querySelector(".steps").append(...stepEls);
 
@@ -411,4 +452,11 @@ export function createVariationElement({
     promoTagWrapper.updateVariation();
   };
   return element;
+}
+
+function createAddItemButton() {
+  const btn = document.createElement("button");
+  btn.className = "btn btn-default";
+  btn.innerHTML = "Add item";
+  return btn;
 }

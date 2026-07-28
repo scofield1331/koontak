@@ -47,6 +47,7 @@ export function createShapeStepElement({ step, handleShapeChange }) {
   element.querySelector(".options").addEventListener("change", (e) => {
     messageEl.innerHTML = '';
     if (e.target.name === "shape") {
+      state.shape = e.target.value;
       handleShapeChange(e.target.value);
     }
   });
@@ -64,6 +65,7 @@ export function createShapeStepElement({ step, handleShapeChange }) {
       messageEl.innerHTML = `${value} not found`;
     }
   };
+  element.get = () => state.shape;
   return element;
 }
 

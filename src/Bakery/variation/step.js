@@ -1,49 +1,44 @@
-import { isExist, findRecipe, findProduct } from "./Utils";
+import { isExist, findProduct } from "./Utils";
 import { registry } from "@/service/Registry";
-import { matchSizeUnit } from "./Utils";
 
 export function createStepElement({
-  step,
-  key,
+  steps,
+  value,
   handleSelect,
-  recipes,
   source,
   handlePercentChange,
   getState,
-  dynamicSteps
+  dynamicSteps,
+  handleStepRemove,
 }) {
   const element = document.createElement("div");
   let state = {
+    step: "",
+    cat: "",
+    product: false,
+    value: value,
     percent: 0,
     costPerGram: 0,
     weight: 0,
     cost: 0,
   };
-  element.className = `align-items-center mb-3 step step-cost ${key}`;
+  element.className = `align-items-center mb-3 step step-cost`;
   element.innerHTML = /* HTML */ `
     <div class="row input">
       <div class="col col-md-1">
-        <label
-          class="col-auto col-form-label text-secondary fw-medium"
-          style="min-width:64px"
-          >${step.label}</label
-        >
+        <template id="category-select"></template>
       </div>
       <div class="col col-md-6">
-        <select class="form-select bg-light" data-name="${key}">
-          <option value="0">— select —</option>
-          ${step.options &&
-          step.options
-            .map(
-              (option) =>
-                `<option value="${option.value}">${option.label}</option>`,
-            )
-            .join()}
-        </select>
+        <template id="product-select"></template>
       </div>
     </div>
     <span class="col-md-12 text-danger message"></span>
   `;
+  const catSelect = createCategorySelectElement({ dynamicSteps, steps });
+  element.querySelector("#category-select").replaceWith(catSelect);
+  const prodSelect = createProductSelectElement({ dynamicSteps, steps });
+  element.querySelector("#product-select").replaceWith(prodSelect);
+
   const pricePerGramInput = Object.assign(document.createElement("div"), {
     innerHTML: /* HTML */ ` <input
         type="text"
@@ -65,17 +60,41 @@ export function createStepElement({
     innerHTML: `<input type="text" class="form-control bg-light" readonly />`,
     className: "col col-md-1",
   });
+  const removeBtn = Object.assign(document.createElement("div"), {
+    innerHTML: `<button>❌</button>`,
+    className: "col col-md-1",
+  });
   element
     .querySelector(".input")
-    .append(pricePerGramInput, percentInput, weightInput, priceInput);
+    .append(
+      pricePerGramInput,
+      percentInput,
+      weightInput,
+      priceInput,
+      removeBtn,
+    );
 
   // event
-  element.querySelector("select").addEventListener("change", (e) => {
+  removeBtn.addEventListener("click", (e) => {
+    handleStepRemove(element);
+  });
+  prodSelect.addEventListener("change", (e) => {
+    state.value = e.target.value;
     update({
       value: e.target.value,
       label: e.target.options[e.target.selectedIndex].text,
     });
     handleSelect(e);
+  });
+  catSelect.addEventListener("change", (e) => {
+    const step = e.target.value;
+    if (steps[step]?.options) {
+      state.step = step;
+      state.cat = steps[step].source;
+      prodSelect.update(steps[step]?.options);
+    } else {
+      alert(`options for {$step} are not found`);
+    }
   });
   percentInput.querySelector("input").addEventListener("change", (e) => {
     state.percent = parseFloat(e.target.value);
@@ -83,25 +102,9 @@ export function createStepElement({
   });
 
   // method
-  const updateRecipe = (recipe) => {
-    if (recipe) {
-      let costPerGram =
-        recipe.Serving > 0 ? recipe.RecipeCost / recipe.Serving : 0;
-      pricePerGramInput.querySelector("input").value = costPerGram.toFixed(3);
-      pricePerGramInput.querySelector(".tooltip-text").innerHTML = /* HTML */ `
-        <div>RecipeCost: ${recipe.RecipeCost}</div>
-        <div>Serving: ${recipe.Serving}</div>
-        <div>formula: RecipeCost/Serving</div>
-      `;
-      state.costPerGram = costPerGram;
-      element.updateWeightByRatio({ totalWeight: getState().totalWeight })
-      element.updateCost();
-    } else {
-      element.clear();
-    }
-  };
   const updateProduct = (product) => {
     if (product) {
+      state.product = product;
       let cal = registry.get("calculator");
       let converter = registry.get("converter");
       let supplier = cal.pickSupplier(product);
@@ -143,23 +146,17 @@ export function createStepElement({
           formula: cost*(1-discount/100)/(size unit to gr)*moneyrate*(1+freight)
         </div>
       `;
-      element.updateWeightByRatio({ totalWeight: getState().totalWeight })
+      element.updateWeightByRatio({ totalWeight: getState().totalWeight });
       element.updateCost();
       state.costPerGram = cost;
     } else {
       element.clear();
     }
   };
-  const update = ({ value, label }) => {
-    if (["step1", "step2"].includes(key)) {
-      let recipename = label;
-      let recipe = findRecipe(recipename, recipes);
-      updateRecipe(recipe);
-    } else if (dynamicSteps.includes(key)) {
-      let productName = label;
-      let product = findProduct(productName, source);
-      updateProduct(product);
-    }
+  const update = ({ label }) => {
+    let productName = label;
+    let product = findProduct(productName, source[state.cat]);
+    updateProduct(product);
   };
 
   element.updateWeightByRatio = ({ totalWeight }) => {
@@ -179,7 +176,7 @@ export function createStepElement({
       newValue = value;
     } else {
       newValue = "0";
-      element.querySelector(`.message`).innerHTML = `${value ?? ''} not found`;
+      element.querySelector(`.message`).innerHTML = `${value ?? ""} not found`;
     }
     update({ value, label });
     element.querySelector("select").value = newValue;
@@ -193,61 +190,40 @@ export function createStepElement({
     priceInput.querySelector("input").value = "";
   };
   element.getPercent = () => (isNaN(state.percent) ? 0 : state.percent);
-  element.setPercent = (percent) => state.percent = 0;
+  element.setPercent = (percent) => (state.percent = percent);
   element.getCost = () => state.cost;
-  element.getKey = () => key;
+  element.get = () => state.value;
   return element;
 }
 
-export function createStep3Element({
-  step,
-  key,
-  handleSelect,
-  handleWeightChange,
-}) {
-  const element = document.createElement("div");
-  element.className = `align-items-center mb-3 step step-weight ${key}`;
-  element.innerHTML = /* HTML */ `
-    <div class="row input">
-      <div class="col col-md-1">
-        <label
-          class="col-auto col-form-label text-secondary fw-medium"
-          style="min-width:64px"
-          >${step.label}</label
-        >
-      </div>
-      <div class="col col-md-6">
-        <select class="form-select bg-light" data-name="${key}">
-          <option value="0">— select —</option>
-          ${step.options &&
-          step.options
-            .map(
-              (option) =>
-                `<option value="${option.value}">${option.label}</option>`,
-            )
-            .join()}
-        </select>
-      </div>
-    </div>
-    <span class="col-md-12 text-danger message"></span>
-  `;
-  // event
-  element.querySelector("select").addEventListener("change", (e) => {
-    handleSelect(e);
-  });
+function createCategorySelectElement({ dynamicSteps, steps }) {
+  const e = document.createElement("select");
+  e.className = "form-select bg-light";
+  e.innerHTML = /* HTML */ `<option value="">— select —</option>
+    ${dynamicSteps &&
+    dynamicSteps
+      .map((step) =>
+        steps[step]
+          ? `<option value="${step}">${steps[step].label}</option>`
+          : "",
+      )
+      .join()} `;
+  return e;
+}
+function createProductSelectElement({}) {
+  const e = document.createElement("select");
+  e.className = "form-select bg-light";
+  e.innerHTML = /* HTML */ `<option value="">— select —</option>`;
 
-  element.fillValue = ({ value, handleFill }) => {
-    let newValue;
-    let label = isExist(value, step.options);
-    if (label) {
-      newValue = value;
-    } else {
-      newValue = "0";
-      element.querySelector(`.message`).innerHTML = `${value ?? ''} not found`;
-    }
-    element.querySelector("select").value = newValue;
-    handleFill({ key, value: newValue });
+  e.update = (options) => {
+    e.innerHTML = /* HTML */ `<option value="">— select —</option>
+      ${options &&
+      options
+        .map(
+          (option) =>
+            `<option value="${option.value}">${option.label}</option>`,
+        )
+        .join()}`;
   };
-  element.getKey = () => key;
-  return element;
+  return e;
 }
