@@ -1,4 +1,4 @@
-import { isExist, findProduct } from "./Utils";
+import { isExist, findProduct, findStep, deepCompare } from "./Utils";
 import { registry } from "@/service/Registry";
 
 export function createStepElement({
@@ -13,7 +13,9 @@ export function createStepElement({
 }) {
   const element = document.createElement("div");
   let state = {
+    steps: steps,
     step: "",
+    key: "",
     cat: "",
     product: false,
     value: value,
@@ -34,9 +36,9 @@ export function createStepElement({
     </div>
     <span class="col-md-12 text-danger message"></span>
   `;
-  const catSelect = createCategorySelectElement({ dynamicSteps, steps });
+  const catSelect = createCategorySelectElement({ dynamicSteps, steps: state.steps });
   element.querySelector("#category-select").replaceWith(catSelect);
-  const prodSelect = createProductSelectElement({ dynamicSteps, steps });
+  const prodSelect = createProductSelectElement({ dynamicSteps, steps: state.steps });
   element.querySelector("#product-select").replaceWith(prodSelect);
 
   const pricePerGramInput = Object.assign(document.createElement("div"), {
@@ -80,18 +82,20 @@ export function createStepElement({
   });
   prodSelect.addEventListener("change", (e) => {
     state.value = e.target.value;
+    state.ingredient = e.target.options[e.target.selectedIndex].text;
     update({
       value: e.target.value,
       label: e.target.options[e.target.selectedIndex].text,
     });
-    handleSelect(e);
+    handleSelect(e, state.key);
   });
   catSelect.addEventListener("change", (e) => {
-    const step = e.target.value;
-    if (steps[step]?.options) {
-      state.step = step;
-      state.cat = steps[step].source;
-      prodSelect.update(steps[step]?.options);
+    const key = e.target.value;
+    if (state.steps[key]?.options) {
+      state.key = key;
+      state.step = state.steps[key];
+      state.cat = state.step.source;
+      prodSelect.update(state.step?.options);
     } else {
       alert(`options for {$step} are not found`);
     }
@@ -102,9 +106,20 @@ export function createStepElement({
   });
 
   // method
+  const rerenderStep = () => {
+    prodSelect.update(state.step?.options);
+    if (state.value) {
+      prodSelect.value = state.value;
+    }
+  };
+  const updateCatSelect = () => {
+    catSelect.value = state.key;
+    prodSelect.update(state.step?.options);
+  };
   const updateProduct = (product) => {
     if (product) {
       state.product = product;
+      state.ingredient = product.Title?.ProductName ?? state.ingredient;
       let cal = registry.get("calculator");
       let converter = registry.get("converter");
       let supplier = cal.pickSupplier(product);
@@ -169,18 +184,29 @@ export function createStepElement({
     state.cost = state.costPerGram * state.weight;
     priceInput.querySelector("input").value = state.cost.toFixed(2);
   };
-  element.fillValue = ({ value, handleFill }) => {
-    let newValue;
-    let label = isExist(value, step.options);
-    if (label) {
-      newValue = value;
+  const fillValue = () => {
+    const rs = findStep(state.value, state.steps);
+    if (rs) {
+      const { key, step } = rs;
+      state.key = key;
+      state.step = step;
+      state.cat = step.source;
+      updateCatSelect();
+      let newValue;
+      let label = isExist(value, step.options);
+      if (label) {
+        newValue = value;
+      } else {
+        newValue = "0";
+        element.querySelector(`.message`).innerHTML =
+          `${value ?? ""} not found`;
+      }
+      update({ value, label });
+      prodSelect.value = newValue;
     } else {
-      newValue = "0";
       element.querySelector(`.message`).innerHTML = `${value ?? ""} not found`;
+      return;
     }
-    update({ value, label });
-    element.querySelector("select").value = newValue;
-    handleFill({ key, value: newValue });
   };
   element.clear = () => {
     state = { ...state, costPerGram: 0, weight: 0, cost: 0 };
@@ -191,8 +217,20 @@ export function createStepElement({
   };
   element.getPercent = () => (isNaN(state.percent) ? 0 : state.percent);
   element.setPercent = (percent) => (state.percent = percent);
+  element.setSteps = (steps) => {
+    if (!deepCompare(state.step, steps[state.key])) {
+      state.step = steps[state.key];
+      rerenderStep();
+    }
+  };
   element.getCost = () => state.cost;
   element.get = () => state.value;
+  element.getKey = () => state.key;
+  element.getIngredient = () => state.ingredient;
+  //init
+  if (value) {
+    fillValue();
+  }
   return element;
 }
 

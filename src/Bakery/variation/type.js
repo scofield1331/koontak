@@ -1,4 +1,4 @@
-import { isExist, findRecipe, findProduct } from "./Utils";
+import { isExist, findRecipe, deepCompare } from "./Utils";
 import { registry } from "@/service/Registry";
 
 export function createTypeStepElement({
@@ -11,7 +11,9 @@ export function createTypeStepElement({
 }) {
   const element = document.createElement("div");
   let state = {
-    type: '',
+    step: step,
+    value: "",
+    ingredient: "",
     percent: 0,
     costPerGram: 0,
     weight: 0,
@@ -24,14 +26,14 @@ export function createTypeStepElement({
         <label
           class="col-auto col-form-label text-secondary fw-medium"
           style="min-width:64px"
-          >${step.label}</label
+          >${state.step.label}</label
         >
       </div>
       <div class="col col-md-6">
         <select class="form-select bg-light" data-name="${key}">
           <option value="0">— select —</option>
-          ${step.options &&
-          step.options
+          ${state.step.options &&
+          state.step.options
             .map(
               (option) =>
                 `<option value="${option.value}">${option.label}</option>`,
@@ -73,7 +75,7 @@ export function createTypeStepElement({
       value: e.target.value,
       label: e.target.options[e.target.selectedIndex].text,
     });
-    handleSelect(e);
+    handleSelect(e, key);
   });
   percentInput.querySelector("input").addEventListener("change", (e) => {
     state.percent = parseFloat(e.target.value);
@@ -81,6 +83,22 @@ export function createTypeStepElement({
   });
 
   // method
+  const rerenderStep = () => {
+    element.querySelector("label").innerHTML = state.step.label;
+    element.querySelector("select").innerHTML = /* HTML */ `<option value="0">
+        — select —
+      </option>
+      ${state.step.options &&
+      state.step.options
+        .map(
+          (option) =>
+            `<option value="${option.value}">${option.label}</option>`,
+        )
+        .join()}`;
+    if (state.value) {
+      element.querySelector("select").value = state.value;
+    }
+  };
   const updateRecipe = (recipe) => {
     if (recipe) {
       let costPerGram =
@@ -101,7 +119,8 @@ export function createTypeStepElement({
   const update = ({ value, label }) => {
     let recipename = label;
     let recipe = findRecipe(recipename, recipes);
-    state.type = value;
+    state.value = value;
+    state.ingredient = recipename;
     updateRecipe(recipe);
   };
 
@@ -117,7 +136,7 @@ export function createTypeStepElement({
   };
   element.fillValue = ({ value, handleFill }) => {
     let newValue;
-    let label = isExist(value, step.options);
+    let label = isExist(value, state.step.options);
     if (label) {
       newValue = value;
     } else {
@@ -135,10 +154,17 @@ export function createTypeStepElement({
     weightInput.querySelector("input").value = "";
     priceInput.querySelector("input").value = "";
   };
-  element.getPercent = () => (isNaN(state.percent) ? 0 : state.percent);
   element.setPercent = (percent) => (state.percent = 0);
+  element.setSteps = (steps) => {
+    if (!deepCompare(state.step, steps[key])) {
+      state.step = steps[key];
+      rerenderStep();
+    }
+  };
+  element.getPercent = () => (isNaN(state.percent) ? 0 : state.percent);
   element.getCost = () => state.cost;
   element.getKey = () => key;
-  element.get = () => state.type;
+  element.get = () => state.value;
+  element.getIngredient = () => state.ingredient;
   return element;
 }

@@ -12,7 +12,7 @@ export function createSizeStepElement({
   element.className = `align-items-center mb-3 step step-weight`;
   element.innerHTML = /* HTML */ `
     <div class="row input">
-      <div class="col col-md-1">
+      <div class="col-12 col-md-1">
         <label
           class="col-auto col-form-label text-secondary fw-medium"
           style="min-width:64px"
@@ -45,7 +45,6 @@ export function createSizeStepElement({
   });
   // method
   const update = () => {
-    sizeEl.value = state.size;
     sizeEl.value = state.size;
   };
   //expose

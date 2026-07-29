@@ -1,3 +1,5 @@
+import { isExist } from "./variation/Utils";
+
 export class JsonConfigEditor {
   /**
    * @param {string|HTMLElement} target  - CSS selector or DOM element to mount into
@@ -272,8 +274,17 @@ export class JsonConfigEditor {
       });
     div.querySelectorAll('[data-action="edit-option"]').forEach((input) =>
       input.addEventListener("change", (e) => {
-        console.log('asdfadf');
         this.handleEditOption({ optionEl: div, inputEl: e.target });
+      }),
+    );
+    div.querySelectorAll('[data-action="edit-option"][data-field="value"]').forEach((input) =>
+      input.addEventListener("input", (e) => {
+        console.log(e.target.value, this._state[key].options);
+        if (isExist(e.target.value, this._state[key].options)) {
+          e.target.classList.add("is-invalid");
+        } else {
+          e.target.classList.remove("is-invalid");
+        }
       }),
     );
     let source;
@@ -288,11 +299,23 @@ export class JsonConfigEditor {
       .find('[data-field="label"]')
       .autocomplete({
         source,
-        select: function (event, ui) {
+        select: (event, ui) => {
           const target = event.target;
           const value = ui.item.value;
-          target.closest('.row').querySelector('[data-action="edit-option"]').value = value.replace(' ', '').slice(0, 4)
-          target.closest('.row').querySelector('[data-action="edit-option"]').dispatchEvent(new Event('change'));
+          const val = value.replace(" ", "").slice(0, 4);
+          if (isExist(val, this._state[key].options)) {
+            target
+              .closest(".row")
+              .querySelector('[data-action="edit-option"]')
+              .classList.add("is-invalid");
+          }
+          target
+            .closest(".row")
+            .querySelector('[data-action="edit-option"]').value = val;
+          target
+            .closest(".row")
+            .querySelector('[data-action="edit-option"]')
+            .dispatchEvent(new Event("change"));
         },
       });
     div.getOption = () => opt;

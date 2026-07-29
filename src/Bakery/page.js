@@ -243,7 +243,6 @@ export class Page {
     });
   }
   async handleCostChange({ totalCost, sku }) {
-    console.log('cost chagne', totalCost, sku);
     const cost = Math.round(totalCost * 100) / 100;
     const calculator = registry.get("calculator");
     const supplier = calculator.pickSupplier(this.product);
@@ -284,21 +283,9 @@ export class Page {
       updateData.Retail = this.product.Retail;
       let keys = ["step1", "step2", ...this.variationCreate.getDynamicSteps()];
       if (keys.includes(key)) {
-        let ingredients = keys
-          .map((key) => {
-            const name = findLabel(this.steps, key, state[key] ?? 0);
-            let ingredient = name;
-            if (this.source[this.steps[key].source]) {
-              const product = findProduct(
-                name,
-                this.source[this.steps[key].source],
-              );
-              if (product) {
-                ingredient = product.Title?.ProductName ?? name;
-              }
-            }
-            return ingredient;
-          })
+        let ingredients = this.variationCreate
+          .getSteps()
+          .map((step) => step.getIngredient())
           .filter(
             (v) => v !== false && !["none", "0"].includes(v.toLowerCase()),
           );
