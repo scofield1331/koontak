@@ -277,6 +277,10 @@ export class Page {
     const cost = Math.round(state.totalCost * 100) / 100;
     if (this.product) {
       renameKeyKeepPositionAndRef(this.product.Retail, oldSku, newSku);
+      if (key == 'size') {
+        this.product.Retail[newSku].RetailSize = value;
+        this.product.Retail[newSku].RetailUnit = 'oz';
+      }
       if (isCostChanged) {
         supplier.Cost = cost;
       }

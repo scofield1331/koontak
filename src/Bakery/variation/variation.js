@@ -82,7 +82,7 @@ export function createVariationElement({
     buildOutput();
     saveSkuChange({
       key: "size",
-      value: sizeStepEl.get(),
+      value: props.size,
     });
   };
   const handleShapeChange = (shape) => {
@@ -363,7 +363,7 @@ export function createVariationElement({
     const steps = state.stepEls
       .map((e) => e.get())
       .filter((v) => v.trim() != "");
-    return `Bake.${size}.${shape}.${type}.${step2}${steps.length ? `.${steps.join(".")}` : ""}`.replaceAll(
+    return `Bake.${size}.${shape}${type?`.${type}`: ''}${step2?`.${step2}`: ''}${steps.length ? `.${steps.join(".")}` : ""}`.replaceAll(
       ".0",
       "",
     );
