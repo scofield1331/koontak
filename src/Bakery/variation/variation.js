@@ -6,6 +6,7 @@ import { createSizeStepElement } from "./size";
 import { registry } from "@/service/Registry";
 import { createShapeStepElement } from "./shape";
 import { createTypeStepElement } from "./type";
+import { defaultRecipeStep, isSkuExist } from "./Utils";
 
 // reducer
 const stateReducer = (state, action) => {
@@ -30,6 +31,7 @@ export function createVariationElement({
   handleSaveVariation,
   handleCostChange,
   handleSizeChange,
+  products,
 }) {
   const staticSteps = ["step1", "step2", "step3"];
   const dynamicSteps = Object.keys(steps).filter(
@@ -45,6 +47,10 @@ export function createVariationElement({
     totalCost: 0,
     variation: false,
     steps: [],
+    recipe: false,
+    stepEls: [],
+    max: 5,
+    product: false,
   };
   dynamicSteps.forEach((key) => (defaultState[key] = 0));
   let state = { ...defaultState, steps };
@@ -77,9 +83,11 @@ export function createVariationElement({
       value: step.get(),
     });
   };
-  const handleVariaztionSizeChange = (props) => {
+  const handleVariationSizeChange = (props) => {
     handleSizeChange(props);
     buildOutput();
+    calculateCost();
+    updateCost();
     saveSkuChange({
       key: "size",
       value: props.size,
@@ -156,17 +164,9 @@ export function createVariationElement({
     state = stateReducer(state, { type: "changeStep", payload: value, key });
   };
   const handlePercentChange = ({ stepEl }) => {
-    let totalPercent = Array.from(
-      element.querySelectorAll(".step-cost"),
-    ).reduce((total, step) => {
-      return total + step.getPercent();
-    }, 0);
+    calculateTotalPercent();
     stepEl.updateWeightByRatio({ totalWeight: state.totalWeight });
     stepEl.updateCost();
-    state = stateReducer(state, {
-      type: "updatePercent",
-      payload: totalPercent,
-    });
     updatePercent();
     calculateCost();
     updateCost();
@@ -180,6 +180,17 @@ export function createVariationElement({
     updateWeight();
   };
   //method
+  const calculateTotalPercent = () => {
+    let totalPercent = Array.from(
+      element.querySelectorAll(".step-cost"),
+    ).reduce((total, step) => {
+      return total + step.getPercent();
+    }, 0);
+    state = stateReducer(state, {
+      type: "updatePercent",
+      payload: totalPercent,
+    });
+  };
   const updateSteps = () => {
     element.querySelector(".steps").innerHTML = "";
     element.querySelector(".steps").append(...state.stepEls);
@@ -299,7 +310,7 @@ export function createVariationElement({
   const [html] = createWrapperElement({ steps });
   element.append(html);
   const sizeStepEl = createSizeStepElement({
-    handleSizeChange: handleVariaztionSizeChange,
+    handleSizeChange: handleVariationSizeChange,
     handleWeightChange,
   });
   const shapeStepEl = createShapeStepElement({
@@ -340,7 +351,7 @@ export function createVariationElement({
   addItemBtn.addEventListener("click", (e) => {
     const newStep = createStepElement({
       steps,
-      value: "",
+      recipeStep: structuredClone(defaultRecipeStep),
       source,
       dynamicSteps,
       handleSelect,
@@ -363,20 +374,39 @@ export function createVariationElement({
     const steps = state.stepEls
       .map((e) => e.get())
       .filter((v) => v.trim() != "");
-    return `Bake.${size}.${shape}${type?`.${type}`: ''}${step2?`.${step2}`: ''}${steps.length ? `.${steps.join(".")}` : ""}`.replaceAll(
-      ".0",
-      "",
+    let skus = ["Bake", size, shape, type, step2, ...steps].filter(
+      (v) => v != false && v !== "0",
     );
+    if (skus.length > state.max) {
+      skus = skus.slice(0, state.max);
+    }
+    return skus.join(".");
   };
   const buildOutput = () => {
+    element.querySelector(".output input").classList.remove("is-invalid");
+    element.querySelector(".output .message").innerHTML = "";
     let output = toSku(state);
     element.querySelector(".output input").value = output;
+    const splitOutput = output.split(".");
+    if (splitOutput.length >= 5) {
+      const rs = isSkuExist(output, state.product.Product, products);
+      if (rs) {
+        state.max = splitOutput.length + 1;
+        element.querySelector(".output input").classList.add("is-invalid");
+        element.querySelector(".output .message").innerHTML =
+          `SKU ${output} exists in product ${rs.Product}`;
+      } else {
+        state.max = splitOutput.length;
+        element.querySelector(".output input").classList.remove("is-invalid");
+        element.querySelector(".output .message").innerHTML = "";
+      }
+    }
   };
-  const createDynamicSteps = ({ values }) => {
-    const stepEls = values.map((value) =>
+  const createDynamicSteps = ({ recipeSteps }) => {
+    const stepEls = recipeSteps.map((recipeStep) =>
       createStepElement({
         steps,
-        value,
+        recipeStep,
         source,
         dynamicSteps,
         handleSelect,
@@ -402,7 +432,7 @@ export function createVariationElement({
     }
     return [true, ""];
   };
-  const loadVariation = ({ sku, variation }) => {
+  const loadVariation = ({ sku }) => {
     state.sku = sku;
     element.querySelector(".output input").value = sku;
     const [result, msg] = validate(sku);
@@ -410,20 +440,30 @@ export function createVariationElement({
       messageEl.innerHTML = msg;
       return;
     }
-    const [cat, size, shape, type, step2, ...steps] = sku.split(".");
+    const skulength = sku.split(".").length;
+    state.max = skulength > state.max ? skulength : state.max;
+    const [cat, size, shape] = sku.split(".");
     sizeStepEl.setSize(size);
     shapeStepEl.setValue(shape);
-    typeStepEl.fillValue({ value: type, handleFill });
-    step2El.fillValue({ value: step2, handleFill });
-    //state stepEls
-    state.stepEls = createDynamicSteps({ values: steps });
+    const [step1, step2, ...steps] = state.recipe;
+    typeStepEl.fillValue({ recipeStep: step1, handleFill });
+    step2El.fillValue({ recipeStep: step2, handleFill });
+    state.stepEls = createDynamicSteps({ recipeSteps: steps });
     updateSteps();
+
+    calculateTotalPercent();
+    updatePercent();
+    calculateCost();
+    updateCost();
   };
+  //expose
   element.set = (product) => {
     clean();
+    state.product = product;
     const retail = product.Retail;
     const calculator = registry.get("calculator");
     state.supplier = calculator.pickSupplier(product);
+    state.recipe = [...product.Recipe];
     promoTagWrapper.clear();
     promoTagWrapper.add(product);
     if (typeof retail !== "object") {
@@ -457,7 +497,7 @@ export function createVariationElement({
   element.setSteps = (steps) => {
     state.steps = steps;
     shapeStepEl.setSteps(steps.step3 ?? []);
-    element.getSteps().forEach(step => step.setSteps(steps));
+    element.getSteps().forEach((step) => step.setSteps(steps));
   };
   element.buildOutput = buildOutput;
   element.clean = clean;
@@ -470,7 +510,14 @@ export function createVariationElement({
   element.updateLabel = () => {
     promoTagWrapper.updateVariation();
   };
-  element.getSteps = () => [typeStepEl, step2El, ...state.stepEls??[]];
+  element.getSteps = () => [typeStepEl, step2El, ...(state.stepEls ?? [])];
+  element.buildRecipe = () => {
+    return element.getSteps().map((step, i) => {
+      const recipeStep = step.getRecipeStep();
+      recipeStep.Step = i + 1;
+      return recipeStep;
+    });
+  };
   return element;
 }
 

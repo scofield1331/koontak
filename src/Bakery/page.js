@@ -4,7 +4,7 @@ import { RetailForm } from "./retailform";
 import { Images } from "./images";
 import { createVariationElement } from "./variation/variation";
 import { createLeftElement } from "./left/left";
-import { Product } from "../Object/Product";
+import { BakeryProduct } from "../Object/BakeryProduct";
 import { Variation } from "../Object/Variation";
 import { Recipe } from "../Object/Recipe";
 import { createRightElement } from "./right/right";
@@ -15,7 +15,7 @@ import { renameKeyKeepPositionAndRef } from "@/service/Object";
 import "./css/sticker.css";
 import "./css/page.css";
 import "./css/create-variation.css";
-import { matchSizeUnit, findProduct } from "./variation/Utils";
+import { matchSizeUnit, findProduct, deepCompare } from "./variation/Utils";
 
 // const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export class Page {
@@ -64,13 +64,14 @@ export class Page {
       this.sourceLabel = response.sourceLabel;
       this.cal = new Calculation(response.setting);
       this.data = response.products.map(
-        (product) => new Product({ ...product, category: "Bakery_Goodies" }),
+        (product) =>
+          new BakeryProduct({ ...product, category: "Bakery_Goodies" }),
       );
       this.source = {};
       for (const category in response.source) {
         const element = response.source[category];
         this.source[category] = response.source[category].map(
-          (product) => new Product({ ...product, category: category }),
+          (product) => new BakeryProduct({ ...product, category: category }),
         );
       }
       this.recipes = response.recipes.map((recipe) => new Recipe(recipe));
@@ -130,7 +131,7 @@ export class Page {
       }).done((response) => {
         $(this.newProductModal).find(".loader").hide();
         if (response.success) {
-          const product = new Product({
+          const product = new BakeryProduct({
             ...response.product,
             category: "Bakery_Goodies",
           });
@@ -231,6 +232,8 @@ export class Page {
       source: this.source,
       setting: this.setting,
       handleSizeChange: this.handleSizeChange.bind(this),
+      products: this.data,
+      product: this.product,
     });
     this.config = new JsonConfigEditor({
       target: "#setting",
@@ -257,6 +260,9 @@ export class Page {
     } else {
       updateData.Suppliers = this.product.Suppliers;
     }
+    const recipe = this.variationCreate.buildRecipe();
+    updateData.Recipe = recipe;
+    this.product.Recipe = recipe;
     let rs = await this.updateLog.update(updateData, this.product, 0);
     if (rs.success) {
       this.retailForm.updateTotalCost(cost);
@@ -277,9 +283,10 @@ export class Page {
     const cost = Math.round(state.totalCost * 100) / 100;
     if (this.product) {
       renameKeyKeepPositionAndRef(this.product.Retail, oldSku, newSku);
-      if (key == 'size') {
+      if (key == "size") {
         this.product.Retail[newSku].RetailSize = value;
-        this.product.Retail[newSku].RetailUnit = 'oz';
+        this.product.Retail[newSku].RetailUnit = "oz";
+        this.product.Retail[newSku].ShipWeight = value;
       }
       if (isCostChanged) {
         supplier.Cost = cost;
@@ -287,12 +294,13 @@ export class Page {
       updateData.Retail = this.product.Retail;
       let keys = ["step1", "step2", ...this.variationCreate.getDynamicSteps()];
       if (keys.includes(key)) {
+        const recipe = this.variationCreate.buildRecipe();
+        this.product.Recipe = recipe;
+        updateData.Recipe = this.product.Recipe;
         let ingredients = this.variationCreate
           .getSteps()
           .map((step) => step.getIngredient())
-          .filter(
-            (v) => v !== false && !["none", "0"].includes(v.toLowerCase()),
-          );
+          .filter((v) => v && !["none", "0"].includes(v.toLowerCase()));
         updateData.Ingredients = ingredients.join(", ");
       }
       if (this.product.SuppliersPricing.length) {

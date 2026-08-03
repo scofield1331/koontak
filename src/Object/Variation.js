@@ -6,7 +6,6 @@ export class Variation {
         this.RetailUnit = data.RetailUnit ?? '';
         this.RetailSize = data.RetailSize ?? '1';
         this.Attribute = data.Attribute ?? '';
-        this.StockRetail = data.StockRetail ?? '';
         this.StockRetailShop = data.StockRetailShop ?? '1';
         this.StockLocation = data.StockLocation ?? '';
         this.UnitPrice = parseFloat(data.UnitPrice) || 0;
@@ -24,7 +23,6 @@ export class Variation {
         data.RetailUnit = this.RetailUnit;
         data.RetailSize = this.RetailSize;
         data.Attribute = this.Attribute;
-        data.StockRetail = this.StockRetail;
         data.StockRetailShop = this.StockRetailShop;
         data.StockLocation = this.StockLocation;
         data.UnitPrice = String(this.UnitPrice);

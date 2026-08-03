@@ -1,5 +1,9 @@
-import { isExist, findRecipe, deepCompare } from "./Utils";
-import { registry } from "@/service/Registry";
+import {
+  findRecipe,
+  deepCompare,
+  isLabelExist,
+  defaultRecipeStep,
+} from "./Utils";
 
 export function createTypeStepElement({
   step,
@@ -13,7 +17,7 @@ export function createTypeStepElement({
   let state = {
     step: step,
     value: "",
-    ingredient: "",
+    recipeStep: structuredClone(defaultRecipeStep),
     percent: 0,
     costPerGram: 0,
     weight: 0,
@@ -31,7 +35,7 @@ export function createTypeStepElement({
       </div>
       <div class="col col-md-6">
         <select class="form-select bg-light" data-name="${key}">
-          <option value="0">— select —</option>
+          <option value="">— select —</option>
           ${state.step.options &&
           state.step.options
             .map(
@@ -79,6 +83,7 @@ export function createTypeStepElement({
   });
   percentInput.querySelector("input").addEventListener("change", (e) => {
     state.percent = parseFloat(e.target.value);
+    state.recipeStep.StepQuantity = (state.percent / 100).toFixed(2);
     handlePercentChange({ stepEl: element });
   });
 
@@ -120,7 +125,13 @@ export function createTypeStepElement({
     let recipename = label;
     let recipe = findRecipe(recipename, recipes);
     state.value = value;
-    state.ingredient = recipename;
+    if (recipe) {
+      state.recipeStep.Ingredient = recipename;
+      state.recipeStep.Format = recipe.RecipeFormat;
+    } else {
+      state.recipeStep.Ingredient = '';
+      state.recipeStep.Format = '';
+    }
     updateRecipe(recipe);
   };
 
@@ -134,14 +145,20 @@ export function createTypeStepElement({
     state.cost = state.costPerGram * state.weight;
     priceInput.querySelector("input").value = state.cost.toFixed(2);
   };
-  element.fillValue = ({ value, handleFill }) => {
+  element.fillValue = ({ recipeStep, handleFill }) => {
+    state.recipeStep = recipeStep
+      ? { ...state.recipeStep, ...recipeStep }
+      : structuredClone(defaultRecipeStep);
+    state.percent = state.recipeStep.StepQuantity * 100;
+    percentInput.querySelector("input").value = state.percent;
+    const label = state.recipeStep.Ingredient;
+    const value = isLabelExist(label, state.step.options);
     let newValue;
-    let label = isExist(value, state.step.options);
-    if (label) {
+    if (value) {
       newValue = value;
     } else {
-      newValue = "0";
-      element.querySelector(`.message`).innerHTML = `${value ?? ""} not found`;
+      newValue = "";
+      element.querySelector(`.message`).innerHTML = `${label ?? ""} not found`;
     }
     update({ value, label });
     element.querySelector("select").value = newValue;
@@ -165,6 +182,8 @@ export function createTypeStepElement({
   element.getCost = () => state.cost;
   element.getKey = () => key;
   element.get = () => state.value;
-  element.getIngredient = () => state.ingredient;
+  element.getIngredient = () => state.recipeStep.Ingredient;
+  element.getFormat = () => state.recipeStep.Format;
+  element.getRecipeStep = () => state.recipeStep;
   return element;
 }

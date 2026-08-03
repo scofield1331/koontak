@@ -1,7 +1,7 @@
 import { registry } from "@/service/Registry";
 import { matchSizeUnit } from "./Utils";
 const state = {
-  size: "4",
+  size: "",
   unit: "Oz",
 };
 export function createSizeStepElement({
@@ -64,7 +64,7 @@ export function createSizeStepElement({
     update();
   };
   element.get = () => {
-    return `${state.size ?? 4}${state.unit?.toLowerCase() ?? "oz"}`;
+    return `${state.size ?? ''}${state.unit?.toLowerCase() ?? 'oz'}`;
   };
   return element;
 }

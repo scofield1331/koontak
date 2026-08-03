@@ -24,6 +24,20 @@ export function createRightElement({ handleDeleteProduct }) {
         <div class="tab-content" id="editing" style="padding: 5px">
           <div class="row mb-3 product_image" id="retail-form"></div>
           <div id="create-variation"></div>
+
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header">Instruction</div>
+                <div class="card-body" style="height: 200px">
+                  <textarea
+                    name="Instruction"
+                    class="form-control Instruction h-100"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
           <!------ product image ------->
           <div id="images"></div>
           <div>
@@ -165,6 +179,7 @@ export function createRightElement({ handleDeleteProduct }) {
     e.find("input[name=Product]").val(product.Product);
     e.find("[name=FixComments]").val(product.FixComments);
     e.find(".Description").html(product.Description);
+    e.find(".Instruction").val(product.Instruction);
     if (product.StoreListingASIN) {
       if (Array.isArray(product.StoreListingASIN.amazon)) {
         var amazonCode = product.StoreListingASIN.amazon[0]
@@ -256,16 +271,18 @@ export function createRightElement({ handleDeleteProduct }) {
   };
   element.clear = () => {
     let e = $(element);
-    e.find("input[name=Product]").val('');
-    e.find("[name=FixComments]").val('');
-    e.find(".Description").html('');
-    e.find('.store-listing-link input').val('');
+    e.find("input[name=Product]").val("");
+    e.find("[name=FixComments]").val("");
+    e.find(".Description").html("");
+    e.find(".Instruction").val("");
+    e.find(".store-listing-link input").val("");
   };
   //event
   element.querySelector(".delete").addEventListener("click", async (e) => {
-    element.querySelector('.delete .bi').className = 'bi spinner-border spinner-border-sm';
+    element.querySelector(".delete .bi").className =
+      "bi spinner-border spinner-border-sm";
     let result = await handleDeleteProduct();
-    element.querySelector('.delete .bi').className = 'bi bi-trash';
+    element.querySelector(".delete .bi").className = "bi bi-trash";
   });
   return element;
 }

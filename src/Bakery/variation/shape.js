@@ -3,7 +3,7 @@ import { deepCompare } from "./Utils";
 export function createShapeStepElement({ step, handleShapeChange }) {
   const state = {
     step: step,
-    shape: "ball",
+    shape: "shape",
   };
   const element = document.createElement("div");
   element.className = `align-items-center mb-3 step step-weight`;
@@ -66,6 +66,7 @@ export function createShapeStepElement({ step, handleShapeChange }) {
     }
   };
   element.setValue = (value) => {
+    state.shape = value;
     messageEl.innerHTML = "";
     try {
       const optionsEl = element.querySelector(`.shape-option.${value}`);

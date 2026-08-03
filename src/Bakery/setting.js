@@ -1,4 +1,4 @@
-import { isExist } from "./variation/Utils";
+import { isExistInConfig } from "./variation/Utils";
 
 export class JsonConfigEditor {
   /**
@@ -279,8 +279,7 @@ export class JsonConfigEditor {
     );
     div.querySelectorAll('[data-action="edit-option"][data-field="value"]').forEach((input) =>
       input.addEventListener("input", (e) => {
-        console.log(e.target.value, this._state[key].options);
-        if (isExist(e.target.value, this._state[key].options)) {
+        if (isExistInConfig(e.target.value, this._state)) {
           e.target.classList.add("is-invalid");
         } else {
           e.target.classList.remove("is-invalid");
@@ -303,7 +302,7 @@ export class JsonConfigEditor {
           const target = event.target;
           const value = ui.item.value;
           const val = value.replace(" ", "").slice(0, 4);
-          if (isExist(val, this._state[key].options)) {
+          if (isExistInConfig(val, this._state)) {
             target
               .closest(".row")
               .querySelector('[data-action="edit-option"]')
