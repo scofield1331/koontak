@@ -4,18 +4,13 @@ export function createOrderElement({ order, onShowClick }) {
   orderElement.className = `order order-log ${getColor(order.Order.OrderStatus)}`;
   orderElement.innerHTML = /* HTML */ `
     <div class="OrderDate" style="width: 150px;">${order.Order.OrderDate}</div>
-    <template id="print"></template>
-    <button class="update">Update</button>
     <template id="show"></template>
     <div class="OrderId">${order.Order.OrderId}</div>
   `;
   // element
-  const printBtn = createPrintButton();
-  orderElement.querySelector("#print").replaceWith(printBtn);
   const showBtn = createShowButton();
   orderElement.querySelector("#show").replaceWith(showBtn);
   //event
-  printBtn.addEventListener("click", () => print(order));
   showBtn.addEventListener("click", () => onShowClick(order));
   return orderElement;
 }

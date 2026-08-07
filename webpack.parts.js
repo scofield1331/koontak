@@ -2,7 +2,7 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const glob = require("glob");
 const path = require("path");
 const prefixSelector = require("postcss-prefix-selector");
-const TerserPlugin = require('terser-webpack-plugin');
+const TerserPlugin = require("terser-webpack-plugin");
 
 exports.common = {
   resolve: {
@@ -13,7 +13,10 @@ exports.common = {
   entry: {
     // 'Bodi/shop/js/UpdatePopup': path.resolve(__dirname, './src/Bodi/Shop/index.js'),
     // 'Bodi/shop/Label/PromoTag': path.resolve(__dirname, './src/Bodi/Shop/Label/index.js'),
-    'Bodi/retail/js/shoporder': path.resolve(__dirname, './src/Bodi/retail/index.js'),
+    "Bodi/retail/js/shoporder": path.resolve(
+      __dirname,
+      "./src/Bodi/retail/index.js",
+    ),
     // 'setting/setting': path.resolve(__dirname, './src/setting/index.js'),
     // 'Accounting/expense': path.resolve(__dirname, './src/Accounting/expense/index.js'),
     // "Bakery/index": path.resolve(__dirname, "./src/Bakery/index.js"),
@@ -35,7 +38,10 @@ exports.common = {
       new TerserPlugin({
         terserOptions: {
           mangle: true,
-          compress: false,
+          compress: {
+            dead_code: true,
+            unused: true,
+          },
           format: {
             beautify: true,
             comments: false,

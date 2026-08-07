@@ -19,3 +19,10 @@ export function getColor(status) {
   }
   return colorCss;
 }
+
+export function getTotalPrice(orders) {
+  return orders.reduce((total, order) => {
+    const price = parseFloat(order.Order?.OrderPaid);
+    return total + (isNaN(price) ? 0 : price);
+  }, 0);
+}
