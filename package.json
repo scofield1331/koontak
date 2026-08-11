@@ -25,8 +25,9 @@
     "webpack-nano": "^1.1.1"
   },
   "scripts": {
-    "build": "wp --mode production",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run typecheck && wp --mode production",
     "build:none": "wp --mode none",
-    "dev": "wp --mode development --watch"
+    "dev": "npm run typecheck && wp --mode development --watch"
   }
 }

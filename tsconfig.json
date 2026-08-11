@@ -3,9 +3,8 @@
   "compilerOptions": {
     "allowJs": true,
     "checkJs": false,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
     // File Layout
     // "rootDir": "./src",
