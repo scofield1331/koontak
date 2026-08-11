@@ -98,7 +98,7 @@ function calculateItemCost(
 ) {
   var itemCost = 0;
   if (costAvgLast == 0) {
-    costAvgLast = self.calculateCostAvgLast(inventoryItem);
+    costAvgLast = calculateCostAvgLast(inventoryItem);
   }
   if (step.Format == "Packaging") {
     itemCost += step.StepQuantity * recipeItem.RecipeQuantity * costAvgLast;
