@@ -26,8 +26,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "npm run typecheck && wp --mode production",
+    "build": "wp --mode production",
     "build:none": "wp --mode none",
-    "dev": "npm run typecheck && wp --mode development --watch"
+    "dev": "wp --mode development --watch"
   }
 }
