@@ -188,8 +188,8 @@ class Variation {
     this.rowLeft.on("change", ".percent", (e) => this.onDataChange());
     this.rowRight.on("input", ".retail", (e) => this.onRetailPriceInput(e));
     this.rowRight.on("change", ".retail", (e) => this.onDataChange());
-    this.rowLeft.on("input", ".profit", (e) => this.onProfitInput(e));
-    this.rowLeft.on("change", ".profit", (e) => this.onDataChange());
+    // this.rowLeft.on("input", ".profit", (e) => this.onProfitInput(e));
+    // this.rowLeft.on("change", ".profit", (e) => this.onDataChange());
     this.rowRight.on("input", ".shipweight", (e) => this.onShipweightInput(e));
     this.rowRight.on("change", ".shipweight", (e) => this.onDataChange(e));
   }
@@ -213,17 +213,17 @@ class Variation {
     this.updateRetailer();
   }
   onProfitInput(e) {
-    let profit = $(e.target).val();
-    this.profit = isNaN(profit) ? 0 : Number(profit);
-    const cost = Number(this.retailForm.supplier.Cost);
-    this.retailPrice = this.profit + cost;
-    this.percent = ((this.retailPrice - cost) / this.retailPrice) * 100;
-    this.variation.RetailMarkup = this.retailPrice;
-    this.variation.RetailUnitPrice = FIX_PRICE;
-    this.rowRight.find(".retail").val(this.retailPrice.toFixed(2));
-    this.rowLeft.find(".percent").val(this.percent.toFixed(2));
-    this.updateShopPrice();
-    this.updateRetailer();
+    // let profit = $(e.target).val();
+    // this.profit = isNaN(profit) ? 0 : Number(profit);
+    // const cost = Number(this.retailForm.supplier.Cost);
+    // this.retailPrice = this.profit + cost;
+    // this.percent = ((this.retailPrice - cost) / this.retailPrice) * 100;
+    // this.variation.RetailMarkup = this.retailPrice;
+    // this.variation.RetailUnitPrice = FIX_PRICE;
+    // this.rowRight.find(".retail").val(this.retailPrice.toFixed(2));
+    // this.rowLeft.find(".percent").val(this.percent.toFixed(2));
+    // this.updateShopPrice();
+    // this.updateRetailer();
   }
   onShipweightInput(e) {
     let shipweight = $(e.target).val();
@@ -321,10 +321,10 @@ class Variation {
     this.rowRight.find(".retailer").val(retailPrice);
   }
   updateProfit() {
-    if (this.retailForm.supplier?.Cost !== undefined) {
-      this.profit = this.retailPrice - this.retailForm.supplier?.Cost;
-    }
-    this.rowLeft.find(".profit").val(this.profit.toFixed(2));
+    // if (this.retailForm.supplier?.Cost !== undefined) {
+    //   this.profit = this.retailPrice - this.retailForm.supplier?.Cost;
+    // }
+    // this.rowLeft.find(".profit").val(this.profit.toFixed(2));
   }
   updateCost() {
     this.rowLeft.find(".total-cost").html(this.retailForm.supplier?.Cost ?? 0);
@@ -338,12 +338,59 @@ class Variation {
   }
   update() {
     let retail = this.variation;
+    let product = this.product;
     let cal = this.retailForm.cal;
+    //bodi profit
+    let retailBodi = cal.calculateRetailBodiNutritions(product, retail);
+    let cost = cal.calculateCost(product, retail);
+    let FeePacking = retail.FeePacking;
+    let FeePackingAuto = cal.getFeePacking(product.category, retail);
+    if (
+      FeePacking < 0 ||
+      FeePacking === "" ||
+      FeePacking == undefined ||
+      isNaN(FeePacking)
+    ) {
+      FeePacking = FeePackingAuto;
+    }
+    let bodiprofit = retailBodi - cost - FeePacking;
+    //retail profit
+
+    let shop = "bodishop";
+    let markuppromo = cal.calculateMarkupUniversal(
+      "promo",
+      shop,
+      product,
+      retail,
+    );
+    let markupexpense = cal.calculateMarkupUniversal(
+      "expense",
+      shop,
+      product,
+      retail,
+    );
+    let markupprofit = cal.calculateMarkupUniversal(
+      "profit",
+      shop,
+      product,
+      retail,
+    );
+    let markupworker = cal.calculateMarkupUniversal(
+      "worker",
+      shop,
+      product,
+      retail,
+    );
+    let retailprofit;
+    if (retail.RetailUnitPrice == FIX_PRICE) {
+      retailprofit = retail.RetailMarkup - retailBodi;
+    } else {
+      retailprofit = markupworker + markupexpense + markuppromo + markupprofit;
+    }
     this.rowLeft.attr("index", this.index);
-    this.rowLeft
-      .find(".name")
-      .html(retail.RetailSize + " " + retail.RetailUnit);
     this.rowLeft.find(".total-cost").html(this.retailForm.supplier?.Cost ?? 0);
+    this.rowLeft.find(".bodi-profit").html(bodiprofit.toFixed(2));
+    this.rowLeft.find(".retail-profit").html(retailprofit.toFixed(2));
     this.rowRight.attr("index", this.index);
     this.rowRight.find(".shipweight").val(retail.ShipWeight);
     this.updateTooltip();
@@ -396,9 +443,9 @@ function createElement() {
       <div class="w-100 d-flex tables">
         <table class="table ammount-list left border-end-0">
           <thead>
-            <th>size</th>
             <th>cost</th>
-            <th>profit</th>
+            <th>bodi profit</th>
+            <th>retail profit</th>
             <th>Percent</th>
           </thead>
           <tbody class="variations"></tbody>
@@ -419,20 +466,17 @@ function createElement() {
         <tr class="variation">
           <td class="align-middle">
             <div class="d-flex align-items-center">
-              <span class="text-value name">4 oz</span>
-            </div>
-          </td>
-          <td class="align-middle">
-            <div class="d-flex align-items-center">
               <span class="text-value total-cost"></span>
             </div>
           </td>
           <td class="align-middle">
             <div class="d-flex align-items-center">
-              <input
-                type="number"
-                class="profit form-control d-inline no-update"
-              />
+              <span class="text-value bodi-profit"></span>
+            </div>
+          </td>
+          <td class="align-middle">
+            <div class="d-flex align-items-center">
+              <span class="text-value retail-profit"></span>
             </div>
           </td>
           <td>

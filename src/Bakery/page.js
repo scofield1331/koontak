@@ -1,11 +1,9 @@
 import { UpdateLog } from "./updatelog";
 import { RetailForm } from "./retailform";
-// import { ProductList } from './product-list';
 import { Images } from "./images";
 import { createVariationElement } from "./variation/variation";
 import { createLeftElement } from "./left/left";
 import { BakeryProduct } from "../Object/BakeryProduct";
-import { Variation } from "../Object/Variation";
 import { Recipe } from "../Object/Recipe";
 import { createRightElement } from "./right/right";
 import { createnewProductModal } from "./left/modal";
@@ -15,9 +13,7 @@ import { renameKeyKeepPositionAndRef } from "@/service/Object";
 import "./css/sticker.css";
 import "./css/page.css";
 import "./css/create-variation.css";
-import { matchSizeUnit, findProduct, deepCompare } from "./variation/Utils";
 
-// const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 export class Page {
   activeRow = null;
   product = null;
@@ -59,7 +55,9 @@ export class Page {
         new Calculation(this.setting, response.suppliers),
       );
       registry.register("converter", this.convert);
-      this.steps = response.steps;
+      this.bakerySetting = response.config;
+      this.steps = response.config.steps;
+      this.packages = response.config.packages;
       this.recipeList = response.recipeList;
       this.sourceLabel = response.sourceLabel;
       this.cal = new Calculation(response.setting);
@@ -234,10 +232,11 @@ export class Page {
       handleSizeChange: this.handleSizeChange.bind(this),
       products: this.data,
       product: this.product,
+      packages: this.packages
     });
     this.config = new JsonConfigEditor({
       target: "#setting",
-      config: this.steps,
+      config: this.bakerySetting,
       recipeList: this.recipeList,
       source: this.sourceLabel,
       dynamicSteps: this.variationCreate.getDynamicSteps(),
@@ -245,8 +244,8 @@ export class Page {
       handleShowSetting: this.handleShowSetting.bind(this),
     });
   }
-  async handleCostChange({ totalCost, sku }) {
-    const cost = Math.round(totalCost * 100) / 100;
+  async handleCostChange({ totalCost, packageCost }) {
+    const cost = Math.round((totalCost + packageCost) * 100) / 100;
     const calculator = registry.get("calculator");
     const supplier = calculator.pickSupplier(this.product);
     if (!supplier) {
@@ -342,20 +341,27 @@ export class Page {
   handleVariationChange() {
     this.variationCreate.updateLabel();
   }
-  async handleSaveConfig(config) {
+  async handleSaveConfig(config, pendingChange, penddingDelete) {
     const response = await fetch("./dispatcher.php?action=saveSetting", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(config),
+      body: JSON.stringify({
+        config: config,
+        change: pendingChange,
+        delete: penddingDelete
+      }),
     });
     const json = response.json();
     json.then((rs) => {
       if (rs.success) {
-        this.steps = JSON.parse(JSON.stringify(config));
+        this.bakerySetting = JSON.parse(JSON.stringify(config));
+        this.steps = this.bakerySetting.steps;
+        this.packages = this.bakerySetting.packages;
         this.config.setConfig(this.steps);
         this.variationCreate.setSteps(this.steps);
+        this.variationCreate.setPackages(this.packages);
       }
     });
     return json;

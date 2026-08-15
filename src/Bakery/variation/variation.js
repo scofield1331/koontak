@@ -6,6 +6,7 @@ import { createSizeStepElement } from "./size";
 import { registry } from "@/service/Registry";
 import { createShapeStepElement } from "./shape";
 import { createTypeStepElement } from "./type";
+import { createPackageElement } from "./package";
 import { defaultRecipeStep, isSkuExist } from "./Utils";
 
 // reducer
@@ -32,6 +33,7 @@ export function createVariationElement({
   handleCostChange,
   handleSizeChange,
   products,
+  packages
 }) {
   const staticSteps = ["step1", "step2", "step3"];
   const dynamicSteps = Object.keys(steps).filter(
@@ -45,15 +47,17 @@ export function createVariationElement({
     totalPercent: 0,
     totalWeight: 0,
     totalCost: 0,
+    packageCost: 0,
     variation: false,
     steps: [],
+    packages: [],
     recipe: false,
     stepEls: [],
     max: 5,
     product: false,
   };
   dynamicSteps.forEach((key) => (defaultState[key] = 0));
-  let state = { ...defaultState, steps };
+  let state = { ...defaultState, steps, packages };
   //handle
   const handleStepRemove = (step) => {
     const index = state.stepEls.indexOf(step);
@@ -105,6 +109,10 @@ export function createVariationElement({
       value: shape,
     });
   };
+  const handlePackageChange = (value) => {
+    state.packageCost = value;
+    saveCostChange();
+  };
   const handleSelect = (e, key) => {
     const name = e.target.getAttribute("data-name");
     let messageEl = e.target.closest(".step").querySelector(".message");
@@ -119,7 +127,8 @@ export function createVariationElement({
     });
   };
   const saveCostChange = async () => {
-    if (state.totalCost != state.supplier?.Cost) {
+    let totalCost = state.totalCost + state.packageCost;
+    if (totalCost != state.supplier?.Cost) {
       element.querySelector(".actions .message").innerHTML = /* HTML */ `
         <div class="spinner-border" role="status">
           <span class="sr-only"></span>
@@ -228,6 +237,7 @@ export function createVariationElement({
       <div class="container-fluid">
         <template id="size-step"></template>
         <template id="shape-step"></template>
+        <template id="package"></template>
       </div>
       <div class="container-fluid">
         <div class="row">
@@ -317,6 +327,11 @@ export function createVariationElement({
     step: steps.step3,
     handleShapeChange,
   });
+  const packageEl = createPackageElement({
+    packages,
+    source,
+    handlePackageChange
+  });
   const typeStepEl = createTypeStepElement({
     step: steps.step1,
     key: "step1",
@@ -336,6 +351,7 @@ export function createVariationElement({
   const addItemBtn = createAddItemButton();
   element.querySelector("#size-step").replaceWith(sizeStepEl);
   element.querySelector("#shape-step").replaceWith(shapeStepEl);
+  element.querySelector("#package").replaceWith(packageEl);
   element.querySelector("#type-step").replaceWith(typeStepEl);
   element.querySelector("#type2-step").replaceWith(step2El);
   element.querySelector("#add-item").replaceWith(addItemBtn);
@@ -419,7 +435,7 @@ export function createVariationElement({
   };
   const clean = () => {
     state = { ...state, ...defaultState };
-    element.querySelectorAll("select").forEach((e) => (e.value = "0"));
+    element.querySelectorAll("select").forEach((e) => (e.value = ""));
     element
       .querySelectorAll('input:not([type="radio"])')
       .forEach((e) => (e.value = ""));
@@ -498,6 +514,10 @@ export function createVariationElement({
     state.steps = steps;
     shapeStepEl.setSteps(steps.step3 ?? []);
     element.getSteps().forEach((step) => step.setSteps(steps));
+  };
+  element.setPackages = (packages) => {
+    state.packages = packages;
+    packageEl.setPackages(state.packages ?? []);
   };
   element.buildOutput = buildOutput;
   element.clean = clean;

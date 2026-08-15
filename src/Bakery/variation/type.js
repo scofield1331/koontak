@@ -3,6 +3,7 @@ import {
   deepCompare,
   isLabelExist,
   defaultRecipeStep,
+  findOptionByLabel,
 } from "./Utils";
 
 export function createTypeStepElement({
@@ -69,9 +70,13 @@ export function createTypeStepElement({
     innerHTML: `<input type="text" class="form-control bg-light" readonly />`,
     className: "col col-md-1",
   });
+  const imageEl = Object.assign(document.createElement("div"), {
+    innerHTML: `<img class="img-thumbnail">`,
+    className: "col col-md-1",
+  });
   element
     .querySelector(".input")
-    .append(pricePerGramInput, percentInput, weightInput, priceInput);
+    .append(pricePerGramInput, percentInput, weightInput, priceInput, imageEl);
 
   // event
   element.querySelector("select").addEventListener("change", (e) => {
@@ -79,6 +84,7 @@ export function createTypeStepElement({
       value: e.target.value,
       label: e.target.options[e.target.selectedIndex].text,
     });
+    updateImage(e.target.options[e.target.selectedIndex].text);
     handleSelect(e, key);
   });
   percentInput.querySelector("input").addEventListener("change", (e) => {
@@ -129,12 +135,22 @@ export function createTypeStepElement({
       state.recipeStep.Ingredient = recipename;
       state.recipeStep.Format = recipe.RecipeFormat;
     } else {
-      state.recipeStep.Ingredient = '';
-      state.recipeStep.Format = '';
+      state.recipeStep.Ingredient = "";
+      state.recipeStep.Format = "";
     }
     updateRecipe(recipe);
   };
-
+  const updateImage = (label) => {
+    const opt = findOptionByLabel(label, state.step.options);
+    if (opt.image) {
+      imageEl.querySelector("img").src = encodeURI(
+        `./icons/${key}/${opt.label}.webp`,
+      );
+    } else {
+      imageEl.querySelector("img").src = '';
+    }
+  };
+  // expose
   element.updateWeightByRatio = ({ totalWeight }) => {
     let percent = isNaN(state.percent) ? 0 : state.percent;
     let weight = (totalWeight * percent) / 100;
@@ -162,6 +178,7 @@ export function createTypeStepElement({
     }
     update({ value, label });
     element.querySelector("select").value = newValue;
+    updateImage(label);
     handleFill({ key, value: newValue });
   };
   element.clear = () => {

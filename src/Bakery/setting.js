@@ -1,4 +1,15 @@
+import { uploadImage } from "./request";
 import { isExistInConfig } from "./variation/Utils";
+const loadingEl = createLoadingEl();
+const elementIds = new WeakMap();
+let counter = 0;
+
+function getElementId(el) {
+  if (!elementIds.has(el)) {
+    elementIds.set(el, ++counter);
+  }
+  return elementIds.get(el);
+}
 
 export class JsonConfigEditor {
   /**
@@ -28,6 +39,8 @@ export class JsonConfigEditor {
     this.source = source;
     this.dynamicSteps = dynamicSteps;
     this.config = config;
+    this.pendingChange = {};
+    this.pendingDelete = [];
     this._render();
   }
   toggle() {
@@ -103,6 +116,7 @@ export class JsonConfigEditor {
       >
         <i class="bi bi-check-circle"></i> Saved
       </div>`;
+    //event
     div
       .querySelector('[data-action="refresh"]')
       .addEventListener("click", (e) => {
@@ -118,23 +132,33 @@ export class JsonConfigEditor {
           <span class="sr-only"></span>
         </div>
       `;
-      btn.disabled = true;
-      this.handleSave(this._state).then((rs) => {
-        btn.disabled = false;
-        if (rs.success) {
-          div.querySelector(".message").innerHTML = "saved";
-        } else {
-          div.querySelector(".message").innerHTML = rs.error;
-        }
-      });
+      // btn.disabled = true;
+      this.handleSave(this._state, this.pendingChange, this.pendingDelete).then(
+        (rs) => {
+          btn.disabled = false;
+          if (rs.success) {
+            div.querySelector(".message").innerHTML = "saved";
+            this.pendingChange = {};
+            this.pendingDelete = [];
+          } else {
+            div.querySelector(".message").innerHTML = rs.error;
+          }
+        },
+      );
     });
     div
       .querySelector(".steps")
       .append(
-        ...Object.entries(this._state).map(([key, step]) =>
+        ...Object.entries(this._state.steps).map(([key, step]) =>
           this.createCardElement({ key, step }),
         ),
       );
+    div.querySelector(".steps").append(
+      this.createPackageElement({
+        key: "packages",
+        packages: this._state.packages,
+      }),
+    );
     return div;
   }
 
@@ -185,12 +209,14 @@ export class JsonConfigEditor {
     div
       .querySelector(".options")
       .append(
-        ...step.options.map((opt) => this.createOptionElement({ key, opt })),
+        ...step.options.map((opt) =>
+          this.createOptionElement({ group: "steps", key, opt }),
+        ),
       );
     div
       .querySelector('[data-action="add-option"]')
       .addEventListener("click", (e) => {
-        this.handleAddOption({ key, card: div });
+        this.handleAddOption({ group: "steps", key, card: div });
       });
     div
       .querySelector('[data-action="toggle-card"]')
@@ -204,13 +230,15 @@ export class JsonConfigEditor {
         this.handleLabelChange({ key, target: e.currentTarget });
       });
     div.refresh = () => {
-      step = this._state[key];
+      step = this._state.steps[key];
       div.querySelector(".options").innerHTML = "";
       div.querySelector('[data-action="edit-label"]').value = step.label;
       div
         .querySelector(".options")
         .append(
-          ...step.options.map((opt) => this.createOptionElement({ key, opt })),
+          ...step.options.map((opt) =>
+            this.createOptionElement({ group: "steps", key, opt }),
+          ),
         );
     };
     div.toggle = ({ target }) => {
@@ -225,10 +253,93 @@ export class JsonConfigEditor {
         div.querySelector(".card-body").style.display = "block";
       }
     };
+    div.getObject = () => this._state.steps[key];
+    return div;
+  }
+  createPackageElement({ key, packages }) {
+    const div = document.createElement("div");
+    let isOpen = true;
+    div.className = "card mb-2";
+    div.innerHTML = /* HTML */ ` <div
+        class="card-header d-flex align-items-center gap-2 py-2 px-3"
+        style="cursor:pointer"
+        data-action="toggle-card"
+      >
+        <i
+          class="bi bi-chevron-down text-secondary"
+          style="font-size:12px;transition:transform .15s;"
+        ></i>
+        <code
+          class="badge bg-light text-secondary border fw-normal"
+          style="font-size:11px"
+          >${key}</code
+        >
+      </div>
+
+      <div class="card-body py-2 px-3" style="display: block">
+        <div class="row gx-2 mb-1">
+          <div class="col-auto" style="width: 24px"></div>
+          <div class="col-4">
+            <span class="text-muted" style="font-size:11px">value</span>
+          </div>
+          <div class="col">
+            <span class="text-muted" style="font-size:11px">label</span>
+          </div>
+        </div>
+
+        <div class="options"></div>
+
+        <button class="btn btn-primary" data-action="add-option">
+          <i class="bi bi-plus me-1"></i>Add option
+        </button>
+      </div>`;
+    div
+      .querySelector(".options")
+      .append(
+        ...packages.options.map((opt) =>
+          this.createOptionElement({ group: "packages", key, opt }),
+        ),
+      );
+    // package event
+    div
+      .querySelector('[data-action="add-option"]')
+      .addEventListener("click", (e) => {
+        this.handleAddOption({ group: "packages", key, card: div });
+      });
+    div
+      .querySelector('[data-action="toggle-card"]')
+      .addEventListener("click", (e) => {
+        if (e.target.tagName == "INPUT") return;
+        div.toggle({ target: e.currentTarget });
+      });
+    div.refresh = () => {
+      const packages = this._state.packages;
+      div.querySelector(".options").innerHTML = "";
+      div
+        .querySelector(".options")
+        .append(
+          ...packages.options.map((opt) =>
+            this.createOptionElement({ group: "packages", key, opt }),
+          ),
+        );
+    };
+    div.toggle = ({ target }) => {
+      if (isOpen) {
+        isOpen = false;
+        target.querySelector(".bi-chevron-down").style.transform =
+          "rotate(-90deg)";
+        div.querySelector(".card-body").style.display = "none";
+      } else {
+        isOpen = true;
+        target.querySelector(".bi-chevron-down").style.transform = "rotate(0)";
+        div.querySelector(".card-body").style.display = "block";
+      }
+    };
+    div.getObject = () => this._state.packages;
     return div;
   }
 
-  createOptionElement({ key, opt }) {
+  createOptionElement({ group, key, opt }) {
     const div = document.createElement("div");
     div.className = "row gx-2 mb-1 align-items-center";
     div.innerHTML = /* HTML */ ` <div class="col-auto">
@@ -249,7 +360,7 @@ export class JsonConfigEditor {
           placeholder="Value"
         />
       </div>
-      <div class="col">
+      <div class="col-4">
         <input
           class="form-control form-control-sm"
           data-action="edit-option"
@@ -258,6 +369,7 @@ export class JsonConfigEditor {
           placeholder="Label"
         />
       </div>
+      <template id="image"></template>
       <div class="col-auto">
         <span
           class="btn-sm btn-link text-secondary p-0 cursor-pointer"
@@ -267,30 +379,50 @@ export class JsonConfigEditor {
           <i class="bi bi-x-lg" style="font-size:13px"></i>
         </span>
       </div>`;
+    const imageEl = createImageElement({ key, option: opt });
+    div.querySelector("#image").replaceWith(imageEl);
+    //option event
     div
       .querySelector('[data-action="delete-option"]')
       .addEventListener("click", (e) => {
-        this.handleRemoveOption({ key, optionEl: div });
+        this.handleRemoveOption({ group, key, optionEl: div });
       });
     div.querySelectorAll('[data-action="edit-option"]').forEach((input) =>
       input.addEventListener("change", (e) => {
-        this.handleEditOption({ optionEl: div, inputEl: e.target });
+        this.handleEditOption({ group, key, optionEl: div, inputEl: e.target });
       }),
     );
-    div.querySelectorAll('[data-action="edit-option"][data-field="value"]').forEach((input) =>
-      input.addEventListener("input", (e) => {
-        if (isExistInConfig(e.target.value, this._state)) {
-          e.target.classList.add("is-invalid");
-        } else {
-          e.target.classList.remove("is-invalid");
-        }
-      }),
-    );
+    div
+      .querySelectorAll('[data-action="edit-option"][data-field="value"]')
+      .forEach((input) =>
+        input.addEventListener("input", (e) => {
+          if (isExistInConfig(e.target.value, this._state)) {
+            e.target.classList.add("is-invalid");
+          } else {
+            e.target.classList.remove("is-invalid");
+          }
+        }),
+      );
+    imageEl.querySelector("input").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      const name = div.querySelector('[data-field="label"]').value;
+      this.handleEditOption({ group, optionEl: div, inputEl: e.target });
+      imageEl.append(loadingEl);
+      const res = await uploadImage(key, name, file);
+      loadingEl.remove();
+      if (res.success) {
+        imageEl.querySelector(".preview").src = URL.createObjectURL(file);
+      } else {
+        alert(res.error);
+      }
+    });
     let source;
     if (["step1", "step2"].includes(key)) {
       source = this.recipeList;
     } else if (this.dynamicSteps.includes(key)) {
-      source = this.source[this.config[key].source] ?? [];
+      source = this.source[this.config.steps[key].source] ?? [];
+    } else if (key == "packages") {
+      source = this.source[this.config.packages.source] ?? [];
     } else {
       source = [];
     }
@@ -323,33 +455,71 @@ export class JsonConfigEditor {
   }
   handleRefresh() {
     this._state = JSON.parse(JSON.stringify(this.intialData));
+    this.pendingChange = {};
+    this.pendingDelete = [];
     this._root.querySelectorAll(".card").forEach((e) => e.refresh());
   }
   handleLabelChange({ key, target }) {
-    this._state[key].label = target.value;
+    this._state.steps[key].label = target.value;
+  }
+  handleImageChange({ key }) {
+    this._state.steps[key].image = true;
   }
   handleRemoveOption({ key, optionEl }) {
     let opt = optionEl.getOption();
-    let idx = this._state[key].options.indexOf(opt);
-    this._state[key].options.splice(idx, 1);
+    this.pendingDelete.push({
+      key: key,
+      label: opt.label,
+    });
+    let cardEl = optionEl.closest(".card");
+    console.log(cardEl, cardEl.getObject());
+    const obj = cardEl.getObject();
+    let idx = obj.options.indexOf(opt);
+    obj.options.splice(idx, 1);
     optionEl.remove();
   }
-  handleAddOption({ key, card }) {
+  handleAddOption({ group, key, card }) {
     let opt = { value: "", label: "" };
-    this._state[key].options.push(opt);
+    card.getObject().options.push(opt);
     card
       .querySelector(".options")
-      .append(this.createOptionElement({ key, opt }));
+      .append(this.createOptionElement({ group, key, opt }));
   }
-  handleEditOption({ optionEl, inputEl }) {
+  handleEditOption({ key, optionEl, inputEl }) {
     let opt = optionEl.getOption();
     let field = inputEl.dataset.field;
-    opt[field] = inputEl.value;
+    switch (field) {
+      case "image":
+        opt[field] = true;
+        break;
+      case "label": {
+        const oldLabel = opt.label;
+        const newLabel = inputEl.value;
+        if (newLabel != oldLabel) {
+          if (!this.pendingChange[getElementId(optionEl)]) {
+            this.pendingChange[getElementId(optionEl)] = {
+              key: key,
+              oldLabel: oldLabel,
+              newLabel: newLabel,
+            };
+          } else {
+            this.pendingChange[getElementId(optionEl)] = {
+              ...this.pendingChange[getElementId(optionEl)],
+              newLabel: newLabel,
+            };
+          }
+        }
+        opt.label = newLabel;
+        break;
+      }
+      default:
+        opt[field] = inputEl.value;
+    }
   }
   handleMoveOption({ oldIndex, newIndex, optionEl }) {
     let key = optionEl.getKey();
-    let [temp] = this._state[key].options.splice(oldIndex, 1);
-    this._state[key].options.splice(newIndex, 0, temp);
+    let [temp] = this._state.steps[key].options.splice(oldIndex, 1);
+    this._state.steps[key].options.splice(newIndex, 0, temp);
   }
 
   _esc(str = "") {
@@ -359,4 +529,32 @@ export class JsonConfigEditor {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
   }
+}
+
+function createImageElement({ key, option }) {
+  const div = document.createElement("div");
+  div.classList = "col-2";
+  div.innerHTML = /* HTML */ ` <label class="cursor-pointer"
+      ><span class="btn btn-default">image</span>
+      <input
+        class="d-none"
+        data-action="edit-image"
+        data-field="image"
+        type="file"
+      />
+    </label>
+    <img
+      class="preview"
+      ${option.image
+        ? `src=${encodeURI(`./icons/${key}/${option.label}.webp`)}`
+        : ""}
+    />`;
+  return div;
+}
+
+function createLoadingEl() {
+  const div = document.createElement("div");
+  div.classList = "spinner-border";
+  div.innerHTML = /* HTML */ ` <span class="sr-only"></span>`;
+  return div;
 }

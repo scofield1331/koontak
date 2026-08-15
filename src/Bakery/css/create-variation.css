@@ -5,3 +5,7 @@
   background-color: #dff3df;
   border-color: #343a40;
 }
+.img-sm {
+  max-height: 100px;
+  width: auto
+}

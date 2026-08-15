@@ -1,11 +1,10 @@
 import {
-  isExist,
   findProduct,
-  findStep,
   deepCompare,
   isLabelExist,
   defaultRecipeStep,
   findStepByLabel,
+  findOptionByLabel,
 } from "./Utils";
 import { registry } from "@/service/Registry";
 
@@ -82,6 +81,10 @@ export function createStepElement({
     innerHTML: `<button>❌</button>`,
     className: "col col-md-1",
   });
+  const imageEl = Object.assign(document.createElement("div"), {
+    innerHTML: `<img class="img-thumbnail">`,
+    className: "col col-md-1",
+  });
   element
     .querySelector(".input")
     .append(
@@ -90,6 +93,7 @@ export function createStepElement({
       weightInput,
       priceInput,
       removeBtn,
+      imageEl,
     );
 
   // event
@@ -99,14 +103,16 @@ export function createStepElement({
   prodSelect.addEventListener("change", (e) => {
     state.value = e.target.value;
     if (state.value) {
-      state.recipeStep.Ingredient = e.target.options[e.target.selectedIndex].text;
+      state.recipeStep.Ingredient =
+        e.target.options[e.target.selectedIndex].text;
     } else {
-      state.recipeStep.Ingredient = '';
+      state.recipeStep.Ingredient = "";
     }
     update({
       value: e.target.value,
       label: e.target.options[e.target.selectedIndex].text,
     });
+    updateImage(e.target.options[e.target.selectedIndex].text);
     handleSelect(e, state.key);
   });
   catSelect.addEventListener("change", (e) => {
@@ -138,6 +144,16 @@ export function createStepElement({
   const updateCatSelect = () => {
     catSelect.value = state.key;
     prodSelect.update(state.step?.options);
+  };
+  const updateImage = (label) => {
+    const opt = findOptionByLabel(label, state.step.options);
+    if (opt.image) {
+      imageEl.querySelector("img").src = encodeURI(
+        `./icons/${state.key}/${opt.label}.webp`,
+      );
+    } else {
+      imageEl.querySelector("img").src = "";
+    }
   };
   const updateProduct = (product) => {
     if (product) {
@@ -228,6 +244,7 @@ export function createStepElement({
       }
       state.value = newValue;
       update({ value, label });
+      updateImage(label);
       prodSelect.value = newValue;
     } else {
       element.querySelector(`.message`).innerHTML =

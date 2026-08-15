@@ -50,7 +50,7 @@ export function createShapeStepElement({ step, handleShapeChange }) {
             />
             <div class="card text-center px-2 py-2 d-flex justify-content-between h-100">
               <div class="shape-option__icon">
-                <img src="./icons/${option.label.toLowerCase()}.png" alt="${option.value}" />
+                <img src="./icons/step3/${option.label}.webp" alt="${option.value}" />
               </div>
               <div class="shape-option__label mt-1">${option.label}</div>
             </div>

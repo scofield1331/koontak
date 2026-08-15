@@ -13,6 +13,13 @@ export function isLabelExist(label, options) {
     }
   }
   return false;
+}export function findOptionByLabel(label, options) {
+  for (let index = 0; index < options.length; index++) {
+    if (options[index].label == label) {
+      return options[index];
+    }
+  }
+  return false;
 }
 export function isExistInConfig(value, config) {
   for (const key in config) {
