@@ -26,9 +26,11 @@ export class Image {
             this.parent.triggerChangeEvent();
         })
         this.element.find('.open-note').click(e => {
+            e.preventDefault();
             this.element.find('.note').toggle('show');
         })
         this.element.find('.delete').click(e => {
+            e.preventDefault();
             this.parent.delete(this);
             this.remove();
         })

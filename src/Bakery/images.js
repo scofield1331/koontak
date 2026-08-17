@@ -1,17 +1,25 @@
 import { Image } from "./image";
+//bakery, manager
 export class Images {
   updateTimeout = 0;
   path = 0;
   constructor(id, { page }) {
+    this.baseUrl = '.';
     this.page = page;
     this.element = $(`#${id}`);
     this.element.html(createElement());
-    this.imageContainer = this.element.find(".product_image");
+    this.imageContainer = this.getImageContainer();
     this.images = [];
     this.init();
   }
+  getImageContainer() {
+    return this.element.find(".product_image");
+  }
   init() {
-    this.element.find(".add").click((e) => this.addImage());
+    this.element.find(".add").click((e) => {
+      e.preventDefault();
+      this.addImage();
+    });
 
     this.imageContainer.sortable({
       handle: ".move",
@@ -87,7 +95,7 @@ export class Images {
     $.ajax({
       method: "POST",
       dataType: "json",
-      url: "./dispatcher.php?action=imageDelete",
+      url: this.baseUrl + "/dispatcher.php?action=imageDelete",
       data: reportFormItem,
     }).done((response) => {
       if (!response.success) {
@@ -108,7 +116,7 @@ export class Images {
           $.ajax({
             method: "POST",
             dataType: "json",
-            url: "./dispatcher.php?action=saveImage",
+            url: this.baseUrl + "/dispatcher.php?action=saveImage",
             data: imgForm,
             async: true,
             cache: false,
