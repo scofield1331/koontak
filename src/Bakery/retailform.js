@@ -321,10 +321,10 @@ class Variation {
     this.rowRight.find(".retailer").val(retailPrice);
   }
   updateProfit() {
-    // if (this.retailForm.supplier?.Cost !== undefined) {
-    //   this.profit = this.retailPrice - this.retailForm.supplier?.Cost;
-    // }
-    // this.rowLeft.find(".profit").val(this.profit.toFixed(2));
+    const bodiprofit = this.getBodiProfit();
+    const retailprofit = this.getRetailProfit();
+    this.rowLeft.find(".bodi-profit").html(bodiprofit.toFixed(2));
+    this.rowLeft.find(".retail-profit").html(retailprofit.toFixed(2));
   }
   updateCost() {
     this.rowLeft.find(".total-cost").html(this.retailForm.supplier?.Cost ?? 0);
@@ -336,11 +336,10 @@ class Variation {
   getRowRight() {
     return this.rowRight;
   }
-  update() {
+  getBodiProfit() {
     let retail = this.variation;
     let product = this.product;
     let cal = this.retailForm.cal;
-    //bodi profit
     let retailBodi = cal.calculateRetailBodiNutritions(product, retail);
     let cost = cal.calculateCost(product, retail);
     let FeePacking = retail.FeePacking;
@@ -354,8 +353,13 @@ class Variation {
       FeePacking = FeePackingAuto;
     }
     let bodiprofit = retailBodi - cost - FeePacking;
-    //retail profit
-
+    return bodiprofit;
+  }
+  getRetailProfit() {
+    let retail = this.variation;
+    let product = this.product;
+    let cal = this.retailForm.cal;
+    let retailBodi = cal.calculateRetailBodiNutritions(product, retail);
     let shop = "bodishop";
     let markuppromo = cal.calculateMarkupUniversal(
       "promo",
@@ -387,6 +391,13 @@ class Variation {
     } else {
       retailprofit = markupworker + markupexpense + markuppromo + markupprofit;
     }
+    return retailprofit;
+  }
+  update() {
+    let retail = this.variation;
+    const bodiprofit = this.getBodiProfit();
+    const retailprofit = this.getRetailProfit();
+
     this.rowLeft.attr("index", this.index);
     this.rowLeft.find(".total-cost").html(this.retailForm.supplier?.Cost ?? 0);
     this.rowLeft.find(".bodi-profit").html(bodiprofit.toFixed(2));

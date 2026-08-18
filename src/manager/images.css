@@ -1,0 +1,22 @@
+.card .image {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+.product_image .image {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+@media (min-width: 768px) {
+  .col-md-3 {
+    flex: 0 0 auto;
+    width: 25%;
+  }
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+}
+.d-none {
+    display: none
+}

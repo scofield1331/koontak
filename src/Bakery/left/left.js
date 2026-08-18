@@ -4,7 +4,7 @@ import { createList } from "./list";
 export function createLeftElement(props) {
     const list = createList(props);
     const element = document.createElement('div');
-    element.className = 'col-md-3 left-sticky';
+    element.className = 'col-md-3 left-sticky  d-flex flex-column';
     element.appendChild(createLeftTopElement(props));
     element.appendChild(list);
 

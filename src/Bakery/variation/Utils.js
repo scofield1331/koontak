@@ -13,7 +13,8 @@ export function isLabelExist(label, options) {
     }
   }
   return false;
-}export function findOptionByLabel(label, options) {
+}
+export function findOptionByLabel(label, options) {
   for (let index = 0; index < options.length; index++) {
     if (options[index].label == label) {
       return options[index];
@@ -125,5 +126,6 @@ export const defaultRecipeStep = {
   Step: 0,
   Ingredient: "",
   Format: "",
+  Type: "",
   StepQuantity: 0,
 };

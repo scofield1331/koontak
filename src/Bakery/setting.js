@@ -153,12 +153,12 @@ export class JsonConfigEditor {
           this.createCardElement({ key, step }),
         ),
       );
-    div.querySelector(".steps").append(
-      this.createPackageElement({
-        key: "packages",
-        packages: this._state.packages,
-      }),
-    );
+    // div.querySelector(".steps").append(
+    //   this.createPackageElement({
+    //     key: "packages",
+    //     packages: this._state.packages,
+    //   }),
+    // );
     return div;
   }
 
@@ -256,88 +256,88 @@ export class JsonConfigEditor {
     div.getObject = () => this._state.steps[key];
     return div;
   }
-  createPackageElement({ key, packages }) {
-    const div = document.createElement("div");
-    let isOpen = true;
-    div.className = "card mb-2";
-    div.innerHTML = /* HTML */ ` <div
-        class="card-header d-flex align-items-center gap-2 py-2 px-3"
-        style="cursor:pointer"
-        data-action="toggle-card"
-      >
-        <i
-          class="bi bi-chevron-down text-secondary"
-          style="font-size:12px;transition:transform .15s;"
-        ></i>
-        <code
-          class="badge bg-light text-secondary border fw-normal"
-          style="font-size:11px"
-          >${key}</code
-        >
-      </div>
+  // createPackageElement({ key, packages }) {
+  //   const div = document.createElement("div");
+  //   let isOpen = true;
+  //   div.className = "card mb-2";
+  //   div.innerHTML = /* HTML */ ` <div
+  //       class="card-header d-flex align-items-center gap-2 py-2 px-3"
+  //       style="cursor:pointer"
+  //       data-action="toggle-card"
+  //     >
+  //       <i
+  //         class="bi bi-chevron-down text-secondary"
+  //         style="font-size:12px;transition:transform .15s;"
+  //       ></i>
+  //       <code
+  //         class="badge bg-light text-secondary border fw-normal"
+  //         style="font-size:11px"
+  //         >${key}</code
+  //       >
+  //     </div>
 
-      <div class="card-body py-2 px-3" style="display: block">
-        <div class="row gx-2 mb-1">
-          <div class="col-auto" style="width: 24px"></div>
-          <div class="col-4">
-            <span class="text-muted" style="font-size:11px">value</span>
-          </div>
-          <div class="col">
-            <span class="text-muted" style="font-size:11px">label</span>
-          </div>
-        </div>
+  //     <div class="card-body py-2 px-3" style="display: block">
+  //       <div class="row gx-2 mb-1">
+  //         <div class="col-auto" style="width: 24px"></div>
+  //         <div class="col-4">
+  //           <span class="text-muted" style="font-size:11px">value</span>
+  //         </div>
+  //         <div class="col">
+  //           <span class="text-muted" style="font-size:11px">label</span>
+  //         </div>
+  //       </div>
 
-        <div class="options"></div>
+  //       <div class="options"></div>
 
-        <button class="btn btn-primary" data-action="add-option">
-          <i class="bi bi-plus me-1"></i>Add option
-        </button>
-      </div>`;
-    div
-      .querySelector(".options")
-      .append(
-        ...packages.options.map((opt) =>
-          this.createOptionElement({ group: "packages", key, opt }),
-        ),
-      );
-    // package event
-    div
-      .querySelector('[data-action="add-option"]')
-      .addEventListener("click", (e) => {
-        this.handleAddOption({ group: "packages", key, card: div });
-      });
-    div
-      .querySelector('[data-action="toggle-card"]')
-      .addEventListener("click", (e) => {
-        if (e.target.tagName == "INPUT") return;
-        div.toggle({ target: e.currentTarget });
-      });
-    div.refresh = () => {
-      const packages = this._state.packages;
-      div.querySelector(".options").innerHTML = "";
-      div
-        .querySelector(".options")
-        .append(
-          ...packages.options.map((opt) =>
-            this.createOptionElement({ group: "packages", key, opt }),
-          ),
-        );
-    };
-    div.toggle = ({ target }) => {
-      if (isOpen) {
-        isOpen = false;
-        target.querySelector(".bi-chevron-down").style.transform =
-          "rotate(-90deg)";
-        div.querySelector(".card-body").style.display = "none";
-      } else {
-        isOpen = true;
-        target.querySelector(".bi-chevron-down").style.transform = "rotate(0)";
-        div.querySelector(".card-body").style.display = "block";
-      }
-    };
-    div.getObject = () => this._state.packages;
-    return div;
-  }
+  //       <button class="btn btn-primary" data-action="add-option">
+  //         <i class="bi bi-plus me-1"></i>Add option
+  //       </button>
+  //     </div>`;
+  //   div
+  //     .querySelector(".options")
+  //     .append(
+  //       ...packages.options.map((opt) =>
+  //         this.createOptionElement({ group: "packages", key, opt }),
+  //       ),
+  //     );
+  //   // package event
+  //   div
+  //     .querySelector('[data-action="add-option"]')
+  //     .addEventListener("click", (e) => {
+  //       this.handleAddOption({ group: "packages", key, card: div });
+  //     });
+  //   div
+  //     .querySelector('[data-action="toggle-card"]')
+  //     .addEventListener("click", (e) => {
+  //       if (e.target.tagName == "INPUT") return;
+  //       div.toggle({ target: e.currentTarget });
+  //     });
+  //   div.refresh = () => {
+  //     const packages = this._state.packages;
+  //     div.querySelector(".options").innerHTML = "";
+  //     div
+  //       .querySelector(".options")
+  //       .append(
+  //         ...packages.options.map((opt) =>
+  //           this.createOptionElement({ group: "packages", key, opt }),
+  //         ),
+  //       );
+  //   };
+  //   div.toggle = ({ target }) => {
+  //     if (isOpen) {
+  //       isOpen = false;
+  //       target.querySelector(".bi-chevron-down").style.transform =
+  //         "rotate(-90deg)";
+  //       div.querySelector(".card-body").style.display = "none";
+  //     } else {
+  //       isOpen = true;
+  //       target.querySelector(".bi-chevron-down").style.transform = "rotate(0)";
+  //       div.querySelector(".card-body").style.display = "block";
+  //     }
+  //   };
+  //   div.getObject = () => this._state.packages;
+  //   return div;
+  // }
 
   createOptionElement({ group, key, opt }) {
     const div = document.createElement("div");
@@ -417,7 +417,7 @@ export class JsonConfigEditor {
       }
     });
     let source;
-    if (["step1", "step2"].includes(key)) {
+    if (["base", "fusion"].includes(key)) {
       source = this.recipeList;
     } else if (this.dynamicSteps.includes(key)) {
       source = this.source[this.config.steps[key].source] ?? [];

@@ -1,7 +1,7 @@
 export function createList(props) {
     const element = document.createElement('div');
     element.id = 'ProductList';
-    element.className = 'table-list d-md-block';
+    element.className = 'table-list d-md-block overflow-auto';
     element.innerHTML = `
         <div class="text-center">
             <div class="spinner-border" role="status">

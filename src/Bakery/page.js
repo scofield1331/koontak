@@ -57,7 +57,6 @@ export class Page {
       registry.register("converter", this.convert);
       this.bakerySetting = response.config;
       this.steps = response.config.steps;
-      this.packages = response.config.packages;
       this.recipeList = response.recipeList;
       this.sourceLabel = response.sourceLabel;
       this.cal = new Calculation(response.setting);
@@ -232,7 +231,6 @@ export class Page {
       handleSizeChange: this.handleSizeChange.bind(this),
       products: this.data,
       product: this.product,
-      packages: this.packages
     });
     this.config = new JsonConfigEditor({
       target: "#setting",
@@ -244,8 +242,8 @@ export class Page {
       handleShowSetting: this.handleShowSetting.bind(this),
     });
   }
-  async handleCostChange({ totalCost, packageCost }) {
-    const cost = Math.round((totalCost + packageCost) * 100) / 100;
+  async handleCostChange({ totalCost }) {
+    const cost = Math.round((totalCost) * 100) / 100;
     const calculator = registry.get("calculator");
     const supplier = calculator.pickSupplier(this.product);
     if (!supplier) {
@@ -259,7 +257,7 @@ export class Page {
     } else {
       updateData.Suppliers = this.product.Suppliers;
     }
-    const recipe = this.variationCreate.buildRecipe();
+    const recipe = this.variationCreate.buildRecipe() ?? [];
     updateData.Recipe = recipe;
     this.product.Recipe = recipe;
     let rs = await this.updateLog.update(updateData, this.product, 0);
@@ -291,7 +289,8 @@ export class Page {
         supplier.Cost = cost;
       }
       updateData.Retail = this.product.Retail;
-      let keys = ["step1", "step2", ...this.variationCreate.getDynamicSteps()];
+      let keys = [...this.variationCreate.getDynamicSteps()];
+      console.log(key, keys);
       if (keys.includes(key)) {
         const recipe = this.variationCreate.buildRecipe();
         this.product.Recipe = recipe;
@@ -358,10 +357,8 @@ export class Page {
       if (rs.success) {
         this.bakerySetting = JSON.parse(JSON.stringify(config));
         this.steps = this.bakerySetting.steps;
-        this.packages = this.bakerySetting.packages;
         this.config.setConfig(this.steps);
         this.variationCreate.setSteps(this.steps);
-        this.variationCreate.setPackages(this.packages);
       }
     });
     return json;
