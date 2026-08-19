@@ -1,9 +1,3 @@
-#PromoTag {
-  height: 100%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
 .list {
   overflow: scroll;
   flex: 1;

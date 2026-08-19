@@ -1,5 +1,5 @@
 import { registry } from "@/service/Registry";
-
+//Bakery, Shop/Label/
 export function createPromoTag(product, type = "ingredient", options) {
   const calculator = registry.get("calculator");
   let mainVariation =
