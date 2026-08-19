@@ -62,12 +62,9 @@ export function createVariationElement({
       alert("index not found, can't delete");
       return;
     }
-    let totalPercent = [...state.stepEls].reduce(
-      (total, step) => {
-        return total + step.getPercent();
-      },
-      0,
-    );
+    let totalPercent = [...state.stepEls].reduce((total, step) => {
+      return total + step.getPercent();
+    }, 0);
     state = stateReducer(state, {
       type: "updatePercent",
       payload: totalPercent,
@@ -133,7 +130,7 @@ export function createVariationElement({
     }
   };
   const saveSkuChange = ({ key, value }) => {
-    let newSku = element.querySelector(".output input").value;
+    let newSku = sizeStepEl.skuEl.value;
     element.querySelector(".actions .message").innerHTML = /* HTML */ `
       <div class="spinner-border" role="status">
         <span class="sr-only"></span>
@@ -222,30 +219,24 @@ export function createVariationElement({
         </div>
       </div>
       <div class="container-fluid py-3 steps"></div>
-      <template id="add-item"></template>
-      <hr class="my-3" />
-
-      <div class="container-fluid">
+      <div class="mb-2">
+        <template id="add-item"></template>
+      </div>
+      <div class="container-fluid border border-1 border-dark">
         <template id="size-step"></template>
       </div>
       <div class="row align-items-center">
-        <label
-          class="col-auto col-form-label text-secondary fw-medium"
-          style="min-width:64px"
-          >Output</label
-        >
         <div class="col output">
-          <input
-            type="text"
-            class="form-control bg-light"
-            readonly=""
-            placeholder="selections will appear here…"
-          />
           <span class="text-danger message"></span>
         </div>
       </div>
       <div class="mt-2 actions">
         <p class="text-danger message mt-2"></p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span>Label</span>
+        </div>
       </div>
       <div class="row">
         <div class="mt-2 col-md-6 d-flex justify-content-center">
@@ -302,7 +293,7 @@ export function createVariationElement({
       handlePercentChange,
       handleStepRemove,
       getState,
-      handleShapeChange
+      handleShapeChange,
     });
     state.stepEls.push(newStep);
     element.querySelector(".steps").append(newStep);
@@ -316,30 +307,28 @@ export function createVariationElement({
     const steps = state.stepEls
       .map((e) => e.get())
       .filter((v) => v.trim() != "");
-    let skus = ["Bake", size, ...steps].filter(
-      (v) => v != false && v !== "0",
-    );
+    let skus = ["Bake", size, ...steps].filter((v) => v != false && v !== "0");
     if (skus.length > state.max) {
       skus = skus.slice(0, state.max);
     }
     return skus.join(".");
   };
   const buildOutput = () => {
-    element.querySelector(".output input").classList.remove("is-invalid");
+    sizeStepEl.skuEl.classList.remove("is-invalid");
     element.querySelector(".output .message").innerHTML = "";
     let output = toSku(state);
-    element.querySelector(".output input").value = output;
+    sizeStepEl.skuEl.value = output;
     const splitOutput = output.split(".");
     if (splitOutput.length >= 5) {
       const rs = isSkuExist(output, state.product.Product, products);
       if (rs) {
         state.max = splitOutput.length + 1;
-        element.querySelector(".output input").classList.add("is-invalid");
+        sizeStepEl.skuEl.classList.add("is-invalid");
         element.querySelector(".output .message").innerHTML =
           `SKU ${output} exists in product ${rs.Product}`;
       } else {
         state.max = splitOutput.length;
-        element.querySelector(".output input").classList.remove("is-invalid");
+        sizeStepEl.skuEl.classList.remove("is-invalid");
         element.querySelector(".output .message").innerHTML = "";
       }
     }
@@ -356,7 +345,7 @@ export function createVariationElement({
         handlePercentChange,
         handleStepRemove,
         getState,
-        handleShapeChange
+        handleShapeChange,
       }),
     );
     return stepEls;
@@ -378,7 +367,7 @@ export function createVariationElement({
   };
   const loadVariation = ({ sku, variation }) => {
     state.sku = sku;
-    element.querySelector(".output input").value = sku;
+    sizeStepEl.skuEl.value = sku;
     const [result, msg] = validate(sku);
     if (!result) {
       messageEl.innerHTML = msg;
@@ -451,9 +440,8 @@ export function createVariationElement({
   };
   element.getSteps = () => [...(state.stepEls ?? [])];
   element.buildRecipe = () => {
-    console.log('build', element.getSteps());
     return element.getSteps().map((step, i) => {
-      const recipeStep = {...defaultRecipeStep, ...step.getRecipeStep()};
+      const recipeStep = { ...defaultRecipeStep, ...step.getRecipeStep() };
       recipeStep.Step = i + 1;
       return recipeStep;
     });

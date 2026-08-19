@@ -22,7 +22,7 @@ export function createRightElement({ handleDeleteProduct }) {
         </div>
         <!-- EDITING.HTML -->
         <div class="tab-content" id="editing" style="padding: 5px">
-          <div class="row mb-3 product_image" id="retail-form"></div>
+          <div class="row product_image" id="retail-form"></div>
           <div id="create-variation"></div>
 
           <div class="row mb-3">

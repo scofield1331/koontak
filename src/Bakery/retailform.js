@@ -452,7 +452,7 @@ function createElement() {
   return /* HTML */ `
     <div class="col-md-12">
       <div class="w-100 d-flex tables">
-        <table class="table ammount-list left border-end-0">
+        <table class="table ammount-list left border-end-0 mb-1">
           <thead>
             <th>cost</th>
             <th>bodi profit</th>
@@ -461,7 +461,7 @@ function createElement() {
           </thead>
           <tbody class="variations"></tbody>
         </table>
-        <table class="table ammount-list right border-start-0">
+        <table class="table ammount-list right border-start-0 mb-1">
           <thead>
             <th>Retail</th>
             <th>Shop price</th>

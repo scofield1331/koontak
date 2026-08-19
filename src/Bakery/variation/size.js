@@ -12,40 +12,49 @@ export function createSizeStepElement({
   element.className = `align-items-center mb-3 step step-weight`;
   element.innerHTML = /* HTML */ `
     <div class="row input">
-      <div class="col-12 col-md-1">
-        <label
-          class="col-auto col-form-label text-secondary fw-medium"
-          style="min-width:64px"
-          >Size</label
-        >
-      </div>
-      <div class="col col-md-6 d-flex gap-2">
-        <template id="size"></template>
-        <template id="unit"></template>
-        <div class="d-flex">
+      <div class="col col-md-8 d-flex gap-2">
+        <div class="d-flex flex-column col-md-2">
+          <label class="col-auto col-form-label fw-bold"
+            >Size (<template id="unit"></template>)</label
+          >
+          <template id="size"></template>
+        </div>
+        <div class="d-flex flex-column col-md-2">
+          <label class="col-auto col-form-label fw-bold">Quantity</label>
           <input
             type="text"
             class="form-control bg-light"
-            style="width: 60px"
+            style="width: 100px"
           />
-          <label class="col-auto col-form-label fw-medium">Quantity</label>
         </div>
-        <div class="d-flex">
+        <div class="d-flex flex-column col-md-2">
+          <label class="col-auto col-form-label fw-bold">Time</label>
           <input
             type="text"
             class="form-control bg-light"
-            style="width: 60px"
+            style="width: 100px"
           />
-          <label class="col-auto col-form-label fw-medium">Time</label>
+        </div>
+        <div class="d-flex flex-column flex-fill">
+          <label class="col-auto col-form-label fw-bold">SKU</label>
+          <template id="sku"></template>
         </div>
       </div>
-      <div class="col col-md-1"></div>
-      <div class="col col-md-1">Percent (<template id="percent"></template>%)</div>
-      <div class="col col-md-1">Weight (<template id="weight"></template>gr)</div>
-      <div class="col col-md-1">Total <template id="cost"></template>$</div>
-    </div>
+      <div class="col col-md-1">
+        <label class="col-auto col-form-label fw-bold text-nowrap text-truncate w-100">Percent (%)</label>
+        <template id="percent"></template>
+      </div>
+      <div class="col col-md-1">
+        <label class="col-auto col-form-label fw-bold text-nowrap text-truncate w-100">Weight (gr)</label>
+        <template id="weight"></template>
+      </div>
+      <div class="col col-md-1">
+        <label class="col-auto col-form-label fw-bold text-nowrap text-truncate w-100">Total ($)</label>
+        <template id="cost"></template>
+      </div>
 
-    <template id="message"></template>
+      <template id="message"></template>
+    </div>
   `;
   //element
   const sizeEl = createSizeElement();
@@ -54,12 +63,14 @@ export function createSizeStepElement({
   const percentEl = createPercentElement();
   const weightEl = createWeightElement();
   const costEl = createCostElement();
+  const skuEl = createSkuElement();
   element.querySelector("#size").replaceWith(sizeEl);
   element.querySelector("#message").replaceWith(messageEl);
   element.querySelector("#unit").replaceWith(unitEl);
   element.querySelector("#percent").replaceWith(percentEl);
   element.querySelector("#weight").replaceWith(weightEl);
   element.querySelector("#cost").replaceWith(costEl);
+  element.querySelector("#sku").replaceWith(skuEl);
   // event
   sizeEl.addEventListener("change", (e) => {
     state.size = e.target.value;
@@ -96,14 +107,15 @@ export function createSizeStepElement({
     } else {
       percentEl.classList.remove("text-danger");
     }
-    percentEl.innerHTML = percent;
-  }
+    percentEl.value = percent;
+  };
   element.updateWeight = (weight) => {
-    weightEl.innerHTML = weight;
-  }
+    weightEl.value = weight;
+  };
   element.updateCost = (cost) => {
-    costEl.innerHTML = cost;
-  }
+    costEl.value = cost;
+  };
+  element.skuEl = skuEl;
   return element;
 }
 
@@ -112,29 +124,39 @@ function createSizeElement() {
   element.innerHTML = /* HTML */ `<input
     type="text"
     class="form-control bg-light"
-    style="width: 60px"
+    style="width: 100px"
+  />`;
+  return element.firstChild;
+}
+function createSkuElement() {
+  const element = document.createElement("div");
+  element.innerHTML = /* HTML */ `<input
+    type="text"
+    class="form-control bg-light"
   />`;
   return element.firstChild;
 }
 function createUnitElement() {
-  const element = document.createElement("div");
-  element.innerHTML = /* HTML */ `<label
-    class="col-auto col-form-label fw-medium"
-    >Oz</label
-  >`;
-  return element.firstChild;
+  const element = document.createElement("span");
+  return element;
 }
 function createPercentElement() {
-  const element = document.createElement("span");
-  return element
+  const element = Object.assign(document.createElement("input"), {
+    className: "form-control bg-light",
+  });
+  return element;
 }
 function createWeightElement() {
-  const element = document.createElement("span");
-  return element
+  const element = Object.assign(document.createElement("input"), {
+    className: "form-control bg-light",
+  });
+  return element;
 }
 function createCostElement() {
-  const element = document.createElement("span");
-  return element
+  const element = Object.assign(document.createElement("input"), {
+    className: "form-control bg-light",
+  });
+  return element;
 }
 
 function createMessageElement() {

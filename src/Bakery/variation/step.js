@@ -41,8 +41,8 @@ export function createStepElement({
   element.innerHTML = /* HTML */ `
     <div class="row input align-items-center">
       <div class="col col-md-2 d-flex">
-        <template id="category-select"></template>
         <template id="remove"></template>
+        <template id="category-select"></template>
       </div>
       <template id="content"></template>
     </div>
@@ -54,7 +54,7 @@ export function createStepElement({
   });
   const removeBtn = Object.assign(document.createElement("button"), {
     innerHTML: `❌`,
-    className: "align-self-center",
+    className: "align-self-center me-3",
   });
   const costContent = createCostStepElement({
     state,
@@ -79,54 +79,54 @@ export function createStepElement({
   element.querySelector("#remove").replaceWith(removeBtn);
   element.querySelector("#content").replaceWith(costContent);
   state.content = costContent;
-  // event
 
-  removeBtn.addEventListener("click", (e) => {
-    handleStepRemove(element);
-  });
-  catSelect.addEventListener("change", (e) => {
-    const key = e.target.value;
-    Object.assign(state.recipeStep, structuredClone(defaultRecipeStep));
-    state.recipeStep.Type = key;
-    state.key = key;
-    if (key == "shape") {
-      if (state.content !== shapeContent) {
+  const stepStrtegies = {
+    shape: {
+      content: shapeContent,
+      render: (steps) => shapeContent.render(steps.shape, true),
+      fillvalue: () => {
         state.content.replaceWith(shapeContent);
         state.content = shapeContent;
-      }
-    } else {
-      if (state.content !== costContent) {
-        state.content.replaceWith(costContent);
-        state.content = costContent;
-      } else if (key == "packaging") {
-        if (state.content !== packageContent) {
-          state.content.replaceWith(packageContent);
-          state.content = packageContent;
+        state.value = state.recipeStep.Ingredient ?? "";
+        state.key = "shape";
+        try {
+          const optionsEl = element.querySelector(
+            `.shape-option.${state.value}`,
+          );
+          optionsEl.querySelector("input").checked = true;
+        } catch (error) {
+          shapeContent
+            .querySelectorAll('input[type="radio"]')
+            .forEach((input) => {
+              input.checked = false;
+            });
+          element.querySelector(`.message`).innerHTML =
+            `${state.value} not found`;
         }
-      }
-      if (state.steps[key]?.options) {
-        state.step = state.steps[key];
-        state.recipeStep.Format = state.step.source;
-        state.content.prodSelect.update(state.step?.options);
-      } else {
-        alert(`options for {$step} are not found`);
-      }
-    }
-  });
-
-  // method
-  const rerenderStep = (steps) => {
-    if (state.recipeStep?.Type) {
-      if (state.recipeStep.Type == "shape") {
-        shapeContent.render(steps.shape, true);
-      } else if (state.recipeStep.Type == "packaging") {
+      },
+    },
+    packaging: {
+      content: packageContent,
+      onCatSelect,
+      render: (steps) => {
         if (!deepCompare(state.steps.packaging, steps.packaging)) {
           packageContent.prodSelect.update(steps.packaging.options);
           const label = state.recipeStep.Ingredient;
           const value = isLabelExist(label, steps.packaging.options);
           if (value) packageContent.prodSelect.value = state.value;
         }
-      } else {
+      },
+      updateImage,
+      fillvalue: () => {
+        state.content.replaceWith(packageContent);
+        state.content = packageContent;
+      },
+      findAndUpdate,
+    },
+    cost: {
+      content: costContent,
+      onCatSelect,
+      render: (steps) => {
         if (
           !deepCompare(
             state.steps[state.recipeStep.Type],
@@ -141,11 +141,53 @@ export function createStepElement({
           );
           if (value) costContent.prodSelect.value = state.value;
         }
-      }
+      },
+      updateImage,
+      fillvalue: () => {
+        state.percent = state.recipeStep.StepQuantity * 100;
+        state.content.percentInput.querySelector("input").value = state.percent;
+      },
+      findAndUpdate,
+    },
+  };
+  // event
+  removeBtn.addEventListener("click", (e) => {
+    handleStepRemove(element);
+  });
+  catSelect.addEventListener("change", (e) => {
+    const key = e.target.value;
+    Object.assign(state.recipeStep, structuredClone(defaultRecipeStep));
+    state.recipeStep.Type = key;
+    state.key = key;
+    const stepStrategy = stepStrtegies[key] ?? stepStrtegies.cost;
+    if (state.content !== stepStrategy.content) {
+      state.content.replaceWith(stepStrategy.content);
+      state.content = stepStrategy.content;
+    }
+    if (stepStrategy.onCatSelect) {
+      stepStrategy.onCatSelect(key);
+    }
+  });
+  // method
+  function onCatSelect(key) {
+    if (state.steps[key]?.options) {
+      state.step = state.steps[key];
+      state.recipeStep.Format = state.step.source;
+      state.content.prodSelect.update(state.step?.options);
+    } else {
+      alert(`options for {$step} are not found`);
+    }
+  }
+  const rerenderStep = (steps) => {
+    let stepStrategy;
+    if (state.recipeStep?.Type) {
+      stepStrategy =
+        stepStrtegies[state.recipeStep?.Type] ?? stepStrtegies.cost;
+      stepStrategy.render(steps);
     }
     state.steps = steps;
-    if (state.recipeStep.Type !== "shape") {
-      updateImage(state.recipeStep.Ingredient, true);
+    if (stepStrategy && stepStrategy.updateImage) {
+      stepStrategy.updateImage(state.recipeStep.Ingredient, true);
     }
   };
   const updateCatSelect = () => {
@@ -274,60 +316,39 @@ export function createStepElement({
     costContent.priceInput.querySelector("input").value = state.cost.toFixed(2);
   };
   const fillValue = () => {
+    state.ingredient = state.recipeStep?.Ingredient ?? '';
     catSelect.value = state.recipeStep?.Type ?? "";
-    if (state.recipeStep.Type == "shape") {
-      state.content.replaceWith(shapeContent);
-      state.content = shapeContent;
-      const value = state.recipeStep.Ingredient ?? "";
-      state.value = value;
-      state.key = "shape";
-      try {
-        const optionsEl = element.querySelector(`.shape-option.${value}`);
-        optionsEl.querySelector("input").checked = true;
-      } catch (error) {
-        shapeContent
-          .querySelectorAll('input[type="radio"]')
-          .forEach((input) => {
-            input.checked = false;
-          });
-        element.querySelector(`.message`).innerHTML = `${value} not found`;
-      }
-    } else {
-      if (state.recipeStep.Type == "packaging") {
-        state.content.replaceWith(packageContent);
-        state.content = packageContent;
-      } else {
-        state.percent = state.recipeStep.StepQuantity * 100;
-        state.content.percentInput.querySelector("input").value = state.percent;
-      }
-      const rs = findStepByLabel(state.recipeStep.Ingredient, state.steps);
-      if (rs) {
-        const { key, step } = rs;
-        state.key = key;
-        state.step = step;
-        state.recipeStep.Type = key;
-        updateCatSelect();
-        let newValue;
-        let label = state.recipeStep.Ingredient;
-        const value = isLabelExist(label, state.step.options);
-        if (value) {
-          newValue = value;
-        } else {
-          newValue = "";
-          element.querySelector(`.message`).innerHTML =
-            `${label ?? ""} not found`;
-        }
-        state.value = newValue;
-        update({ value, label });
-        updateImage(label);
-        state.content.prodSelect.value = newValue;
-      } else {
-        element.querySelector(`.message`).innerHTML =
-          `${state.recipeStep.Ingredient ?? ""} not found`;
-        return;
-      }
-    }
+    const stepStrategies = stepStrtegies[catSelect.value] ?? stepStrtegies.cost;
+    stepStrategies.fillvalue();
+    stepStrategies.findAndUpdate && stepStrategies.findAndUpdate();
   };
+  function findAndUpdate() {
+    const rs = findStepByLabel(state.recipeStep.Ingredient, state.steps);
+    if (rs) {
+      const { key, step } = rs;
+      state.key = key;
+      state.step = step;
+      state.recipeStep.Type = key;
+      updateCatSelect();
+      let newValue;
+      let label = state.recipeStep.Ingredient;
+      const value = isLabelExist(label, state.step.options);
+      if (value) {
+        newValue = value;
+      } else {
+        newValue = "";
+        element.querySelector(`.message`).innerHTML =
+          `${label ?? ""} not found`;
+      }
+      state.value = newValue;
+      update({ value, label });
+      updateImage(label);
+      state.content.prodSelect.value = newValue;
+    } else {
+      element.querySelector(`.message`).innerHTML =
+        `${state.recipeStep.Ingredient ?? ""} not found`;
+    }
+  }
   element.clear = () => {
     state.costPerGram = 0;
     state.weight = 0;
@@ -446,6 +467,7 @@ function createCostStepElement({
     if (state.value) {
       state.recipeStep.Ingredient =
         e.target.options[e.target.selectedIndex].text;
+      state.ingredient = e.target.options[e.target.selectedIndex].text;
     } else {
       state.recipeStep.Ingredient = "";
     }

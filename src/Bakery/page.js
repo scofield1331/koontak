@@ -243,7 +243,7 @@ export class Page {
     });
   }
   async handleCostChange({ totalCost }) {
-    const cost = Math.round((totalCost) * 100) / 100;
+    const cost = Math.round(totalCost * 100) / 100;
     const calculator = registry.get("calculator");
     const supplier = calculator.pickSupplier(this.product);
     if (!supplier) {
@@ -290,13 +290,13 @@ export class Page {
       }
       updateData.Retail = this.product.Retail;
       let keys = [...this.variationCreate.getDynamicSteps()];
-      console.log(key, keys);
       if (keys.includes(key)) {
         const recipe = this.variationCreate.buildRecipe();
         this.product.Recipe = recipe;
         updateData.Recipe = this.product.Recipe;
         let ingredients = this.variationCreate
           .getSteps()
+          .filter((step) => step.getKey() !== "shape")
           .map((step) => step.getIngredient())
           .filter((v) => v && !["none", "0"].includes(v.toLowerCase()));
         updateData.Ingredients = ingredients.join(", ");
@@ -349,7 +349,7 @@ export class Page {
       body: JSON.stringify({
         config: config,
         change: pendingChange,
-        delete: penddingDelete
+        delete: penddingDelete,
       }),
     });
     const json = response.json();
