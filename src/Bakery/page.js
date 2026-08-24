@@ -5,6 +5,7 @@ import { createVariationElement } from "./variation/variation";
 import { createLeftElement } from "./left/left";
 import { BakeryProduct } from "../Object/BakeryProduct";
 import { Recipe } from "../Object/Recipe";
+import { Supplier } from "../Object/Supplier";
 import { createRightElement } from "./right/right";
 import { createnewProductModal } from "./left/modal";
 import { JsonConfigEditor } from "./setting";
@@ -13,6 +14,7 @@ import { renameKeyKeepPositionAndRef } from "@/service/Object";
 import "./css/sticker.css";
 import "./css/page.css";
 import "./css/create-variation.css";
+import { findSupplier, formatDate } from "./variation/Utils";
 
 export class Page {
   activeRow = null;
@@ -54,6 +56,8 @@ export class Page {
         "calculator",
         new Calculation(this.setting, response.suppliers),
       );
+      this.timezone = response.timezone;
+      registry.register("timezone", this.timezone);
       registry.register("converter", this.convert);
       this.bakerySetting = response.config;
       this.steps = response.config.steps;
@@ -81,7 +85,7 @@ export class Page {
         convert: this.convert,
         page: this,
       });
-      registry.register('retailForm', this.retailForm);
+      registry.register("retailForm", this.retailForm);
       this.images = new Images("images", { page: this });
     });
   }
@@ -224,6 +228,8 @@ export class Page {
     this.setNewProductEvent();
     this.variationCreate = createVariationElement({
       handleSaveVariation: this.handleSaveVariation.bind(this),
+      handleSaveQuantity: this.handleSaveQuantity.bind(this),
+      handleSaveTime: this.handleSaveTime.bind(this),
       handleCostChange: this.handleCostChange.bind(this),
       steps: this.steps,
       recipes: this.recipes,
@@ -269,6 +275,55 @@ export class Page {
     }
     return rs;
   }
+  handleSaveQuantity({ size, quantity }) {
+    if (!this.product) {
+      alert("product not selected");
+      return;
+    }
+    let updateData = {};
+    let supplier = findSupplier(this.product.Suppliers);
+    let date = formatDate();
+    if (!supplier) {
+      supplier = new Supplier({ Supplier: `Bodi Nutritions_${date}` });
+      this.product.Suppliers.unshift(supplier);
+    }
+    supplier.Purchase = quantity ?? "";
+    supplier.SupplierSize = size ?? "";
+    supplier.DatePurchase = date;
+    updateData.Suppliers = this.product.Suppliers;
+    return new Promise((resolve) => {
+      this.updateLog.update(updateData, this.product, 1).then((rs) => {
+        if (!rs.success) {
+          alert(rs.error);
+        }
+        resolve(rs);
+      });
+    });
+  }
+  handleSaveTime({ sku, time }) {
+    if (!this.product) {
+      alert("product not selected");
+      return;
+    }
+    let updateData = {};
+    if (time) {
+      const variation = this.product.Retail[sku];
+      if (!variation) {
+        alert(`variation ${sku} not found`);
+        return;
+      }
+      variation.TaskPoint = Math.round((time / 60) * 1000) / 1000;
+      updateData.Retail = this.product.Retail;
+    }
+    return new Promise((resolve) => {
+      this.updateLog.update(updateData, this.product, 1).then((rs) => {
+        if (!rs.success) {
+          alert(rs.error);
+        }
+        resolve(rs);
+      });
+    });
+  }
   handleSaveVariation({ oldSku, newSku, key, value, state }) {
     let updateData = {};
     const calculator = registry.get("calculator");
@@ -304,7 +359,8 @@ export class Page {
       }
       if (this.product.SuppliersPricing.length) {
         updateData.SuppliersPricing = this.product.SuppliersPricing;
-      } else {
+      }
+      if (this.product.Suppliers.length) {
         updateData.Suppliers = this.product.Suppliers;
       }
       return new Promise((resolve) => {
@@ -330,13 +386,18 @@ export class Page {
   }
   handleSizeChange({ size, unit }) {
     const calculator = registry.get("calculator");
-    const supplier = calculator.pickSupplier(this.product);
-    if (!supplier) {
+    const supplierpricing = calculator.pickSupplier(this.product);
+    if (!supplierpricing) {
       alert("supplier not found");
       throw new Error("supplier not found");
     }
-    supplier.SupplierSize = size;
-    supplier.SupplierUnit = unit;
+    supplierpricing.SupplierSize = size;
+    supplierpricing.SupplierUnit = unit;
+
+    const supplier = findSupplier(this.product.Suppliers);
+    if (supplier) {
+      supplier.SupplierSize = size;
+    }
   }
   handleVariationChange() {
     this.variationCreate.updateLabel();

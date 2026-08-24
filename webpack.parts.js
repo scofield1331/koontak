@@ -34,23 +34,24 @@ exports.common = {
     Calculation: "Calculation",
   },
   optimization: {
-    minimize: true,
-    minimizer: [
-      new TerserPlugin({
-        terserOptions: {
-          mangle: true,
-          compress: {
-            dead_code: true,
-            unused: true,
-          },
-          format: {
-            beautify: true,
-            comments: false,
-          },
-        },
-        extractComments: false,
-      }),
-    ],
+    minimize: false,
+    // minimizer: [
+    //   new TerserPlugin({
+    //     terserOptions: {
+    //       mangle: false,
+    //       compress: {
+    //         dead_code: true,
+    //         unused: true,
+    //       },
+    //       format: {
+    //         beautify: true,
+    //         comments: false,
+    //         ascii_only: false,
+    //       },
+    //     },
+    //     extractComments: false,
+    //   }),
+    // ],
   },
 };
 

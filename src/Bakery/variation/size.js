@@ -1,18 +1,23 @@
 import { registry } from "@/service/Registry";
-import { matchSizeUnit } from "./Utils";
 const state = {
   size: "",
   unit: "Oz",
+  quantity: '',
+  time: '',
 };
 export function createSizeStepElement({
   handleSizeChange,
   handleWeightChange,
+  handleTimeChange,
+  handleQuantityChange,
+  supplier,
+  variation,
 }) {
   const element = document.createElement("div");
   element.className = `align-items-center mb-3 step step-weight`;
   element.innerHTML = /* HTML */ `
     <div class="row input">
-      <div class="col col-md-8 d-flex gap-2">
+      <div class="col col-md-8 d-flex gap-1 px-1">
         <div class="d-flex flex-column col-md-2">
           <label class="col-auto col-form-label fw-bold"
             >Size (<template id="unit"></template>)</label
@@ -21,35 +26,36 @@ export function createSizeStepElement({
         </div>
         <div class="d-flex flex-column col-md-2">
           <label class="col-auto col-form-label fw-bold">Quantity</label>
-          <input
-            type="text"
-            class="form-control bg-light"
-            style="width: 100px"
-          />
+          <template id="quantity"></template>
         </div>
         <div class="d-flex flex-column col-md-2">
           <label class="col-auto col-form-label fw-bold">Time</label>
-          <input
-            type="text"
-            class="form-control bg-light"
-            style="width: 100px"
-          />
+          <template id="time"></template>
         </div>
         <div class="d-flex flex-column flex-fill">
           <label class="col-auto col-form-label fw-bold">SKU</label>
           <template id="sku"></template>
         </div>
       </div>
-      <div class="col col-md-1">
-        <label class="col-auto col-form-label fw-bold text-nowrap text-truncate w-100">Percent (%)</label>
+      <div class="col col-md-1 px-1">
+        <label
+          class="col-auto col-form-label fw-bold text-nowrap text-truncate w-100"
+          >Percent (%)</label
+        >
         <template id="percent"></template>
       </div>
-      <div class="col col-md-1">
-        <label class="col-auto col-form-label fw-bold text-nowrap text-truncate w-100">Weight (gr)</label>
+      <div class="col col-md-1 px-1">
+        <label
+          class="col-auto col-form-label fw-bold text-nowrap text-truncate w-100"
+          >Weight (gr)</label
+        >
         <template id="weight"></template>
       </div>
-      <div class="col col-md-1">
-        <label class="col-auto col-form-label fw-bold text-nowrap text-truncate w-100">Total ($)</label>
+      <div class="col col-md-1 px-1">
+        <label
+          class="col-auto col-form-label fw-bold text-nowrap text-truncate w-100"
+          >Total ($)</label
+        >
         <template id="cost"></template>
       </div>
 
@@ -64,6 +70,14 @@ export function createSizeStepElement({
   const weightEl = createWeightElement();
   const costEl = createCostElement();
   const skuEl = createSkuElement();
+  const qtyInput = Object.assign(document.createElement("input"), {
+    type: "text",
+    className: "form-control bg-light w-100",
+  });
+  const timeInput = Object.assign(document.createElement("input"), {
+    type: "text",
+    className: "form-control bg-light w-100",
+  });
   element.querySelector("#size").replaceWith(sizeEl);
   element.querySelector("#message").replaceWith(messageEl);
   element.querySelector("#unit").replaceWith(unitEl);
@@ -71,6 +85,8 @@ export function createSizeStepElement({
   element.querySelector("#weight").replaceWith(weightEl);
   element.querySelector("#cost").replaceWith(costEl);
   element.querySelector("#sku").replaceWith(skuEl);
+  element.querySelector("#quantity").replaceWith(qtyInput);
+  element.querySelector("#time").replaceWith(timeInput);
   // event
   sizeEl.addEventListener("change", (e) => {
     state.size = e.target.value;
@@ -81,10 +97,20 @@ export function createSizeStepElement({
     handleWeightChange(isNaN(togr) ? 0 : togr);
     handleSizeChange(state);
   });
+  qtyInput.addEventListener("change", (e) => {
+    state.quantity = e.target.value;
+    handleQuantityChange(state);
+  })
+  timeInput.addEventListener("change", (e) => {
+    state.time = e.target.value;
+    handleTimeChange(state);
+  })
   // method
   const update = () => {
     sizeEl.value = state.size;
     unitEl.innerHTML = state.unit;
+    qtyInput.value = state.quantity;
+    timeInput.value = state.time;
   };
   //public
   element.setSize = ({ RetailSize, RetailUnit }) => {
@@ -95,6 +121,14 @@ export function createSizeStepElement({
       converter.convertStockValue(state.size, state.unit, "gr"),
     );
     handleWeightChange(isNaN(togr) ? 0 : togr);
+    update();
+  };
+  element.setQuantity = ({ Purchase }) => {
+    state.quantity = Purchase ?? '';
+    update();
+  };
+  element.setTime = ({ TaskPoint }) => {
+    state.time = TaskPoint ? TaskPoint * 60 : '';
     update();
   };
   element.get = () => {
@@ -123,7 +157,7 @@ function createSizeElement() {
   const element = document.createElement("div");
   element.innerHTML = /* HTML */ `<input
     type="text"
-    class="form-control bg-light"
+    class="form-control bg-light w-100"
     style="width: 100px"
   />`;
   return element.firstChild;
@@ -132,7 +166,7 @@ function createSkuElement() {
   const element = document.createElement("div");
   element.innerHTML = /* HTML */ `<input
     type="text"
-    class="form-control bg-light"
+    class="form-control bg-light w-100"
   />`;
   return element.firstChild;
 }
@@ -142,19 +176,19 @@ function createUnitElement() {
 }
 function createPercentElement() {
   const element = Object.assign(document.createElement("input"), {
-    className: "form-control bg-light",
+    className: "form-control bg-light w-100",
   });
   return element;
 }
 function createWeightElement() {
   const element = Object.assign(document.createElement("input"), {
-    className: "form-control bg-light",
+    className: "form-control bg-light w-100",
   });
   return element;
 }
 function createCostElement() {
   const element = Object.assign(document.createElement("input"), {
-    className: "form-control bg-light",
+    className: "form-control bg-light w-100",
   });
   return element;
 }

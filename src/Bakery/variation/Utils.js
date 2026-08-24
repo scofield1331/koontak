@@ -1,3 +1,4 @@
+import { registry } from "@/service/Registry";
 export function isExist(value, options) {
   for (let index = 0; index < options.length; index++) {
     if (options[index].value == value) {
@@ -129,3 +130,29 @@ export const defaultRecipeStep = {
   Type: "",
   StepQuantity: 0,
 };
+
+export function findSupplier(suppliers) {
+  const date = formatDate();
+  for (let index = 0; index < suppliers.length; index++) {
+    const supplier = suppliers[index];
+    if (supplier.Supplier == `Bodi Nutritions_${date}`) {
+      return supplier;
+    }
+  }
+  return false;
+}
+export function formatDate(date = new Date()) {
+  if (registry.isset("timezone")) {
+    const formatter = new Intl.DateTimeFormat("en-CA", {
+      timeZone: registry.get("timezone"),
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+    formatter.format(date);
+  }
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}

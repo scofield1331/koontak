@@ -37,10 +37,10 @@ export function createStepElement({
     cost: 0,
     content: false,
   };
-  element.className = `align-items-center mb-3 step step-cost`;
+  element.className = `align-items-center mb-1 step step-cost`;
   element.innerHTML = /* HTML */ `
     <div class="row input align-items-center">
-      <div class="col col-md-2 d-flex">
+      <div class="col col-md-2 d-flex px-1">
         <template id="remove"></template>
         <template id="category-select"></template>
       </div>
@@ -54,7 +54,7 @@ export function createStepElement({
   });
   const removeBtn = Object.assign(document.createElement("button"), {
     innerHTML: `❌`,
-    className: "align-self-center me-3",
+    className: "align-self-center me-1",
   });
   const costContent = createCostStepElement({
     state,
@@ -423,7 +423,7 @@ function createCostStepElement({
   const wrapper = document.createElement("div");
   wrapper.style.display = "contents";
   const prodSelectEl = document.createElement("div");
-  prodSelectEl.classList = "col col-md-5 px-2";
+  prodSelectEl.classList = "col col-md-5 px-1";
   const prodSelect = createProductSelectElement();
   prodSelectEl.append(prodSelect);
 
@@ -434,23 +434,23 @@ function createCostStepElement({
         readonly
       />
       <span class="tooltip-text"></span>`,
-    className: "col col-md-1 tooltip-wrap",
+    className: "col col-md-1 tooltip-wrap px-1",
   });
   const percentInput = Object.assign(document.createElement("div"), {
     innerHTML: `<input type="text" class="form-control bg-light" />`,
-    className: "col col-md-1 px-2",
+    className: "col col-md-1 px-1",
   });
   const weightInput = Object.assign(document.createElement("div"), {
     innerHTML: `<input type="text" class="form-control bg-light" readonly />`,
-    className: "col col-md-1 px-2",
+    className: "col col-md-1 px-1",
   });
   const priceInput = Object.assign(document.createElement("div"), {
     innerHTML: `<input type="text" class="form-control bg-light" readonly />`,
-    className: "col col-md-1 px-2",
+    className: "col col-md-1 px-1",
   });
   const imageEl = Object.assign(document.createElement("div"), {
     innerHTML: `<img class="img-thumbnail">`,
-    className: "col col-md-1 px-2",
+    className: "col col-md-1 px-1",
   });
   wrapper.append(
     prodSelectEl,
@@ -550,26 +550,26 @@ function createPackageStepElement({
   const wrapper = document.createElement("div");
   wrapper.style.display = "contents";
   const prodSelectEl = document.createElement("div");
-  prodSelectEl.classList = "col col-md-5 px-2";
+  prodSelectEl.classList = "col col-md-5 px-1";
   const prodSelect = createProductSelectElement();
   prodSelectEl.append(prodSelect);
 
   const pricePerGramInput = Object.assign(document.createElement("div"), {
-    className: "col col-md-1 tooltip-wrap",
+    className: "col col-md-1 tooltip-wrap px-1",
   });
   const percentInput = Object.assign(document.createElement("div"), {
-    className: "col col-md-1 px-2",
+    className: "col col-md-1 px-1",
   });
   const weightInput = Object.assign(document.createElement("div"), {
-    className: "col col-md-1 px-2",
+    className: "col col-md-1 px-1",
   });
   const priceInput = Object.assign(document.createElement("div"), {
     innerHTML: `<input type="text" class="form-control bg-light" readonly />`,
-    className: "col col-md-1 px-2",
+    className: "col col-md-1 px-1",
   });
   const imageEl = Object.assign(document.createElement("div"), {
     innerHTML: `<img class="img-thumbnail">`,
-    className: "col col-md-1 px-2",
+    className: "col col-md-1 px-1",
   });
   wrapper.append(
     prodSelectEl,

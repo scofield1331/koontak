@@ -4,7 +4,7 @@ import { Variation } from "@/Object/Variation";
 import { createStepElement } from "./step";
 import { createSizeStepElement } from "./size";
 import { registry } from "@/service/Registry";
-import { defaultRecipeStep, isSkuExist } from "./Utils";
+import { defaultRecipeStep, isSkuExist, findSupplier } from "./Utils";
 
 // reducer
 const stateReducer = (state, action) => {
@@ -27,6 +27,8 @@ export function createVariationElement({
   recipes,
   source,
   handleSaveVariation,
+  handleSaveQuantity,
+  handleSaveTime,
   handleCostChange,
   handleSizeChange,
   products,
@@ -172,7 +174,37 @@ export function createVariationElement({
     });
     updateWeight();
   };
+  const handleQuantityChange = ({ quantity, size }) => {
+    showLoading();
+    handleSaveQuantity({ quantity, size }).then((rs) => {
+      if (rs.success) {
+        hideLoading();
+      } else {
+        element.querySelector(".actions .message").innerHTML = rs.message;
+      }
+    });
+  };
+  const handleTimeChange = ({ time }) => {
+    showLoading();
+    handleSaveTime({ sku: state.sku, time }).then((rs) => {
+      if (rs.success) {
+        hideLoading();
+      } else {
+        element.querySelector(".actions .message").innerHTML = rs.message;
+      }
+    });
+  };
   //method
+  const showLoading = () => {
+    element.querySelector(".actions .message").innerHTML = /* HTML */ `
+      <div class="spinner-border" role="status">
+        <span class="sr-only"></span>
+      </div>
+    `;
+  };
+  const hideLoading = () => {
+    element.querySelector(".actions .message").innerHTML = "";
+  };
   const calculateTotalPercent = () => {
     let totalPercent = Array.from(
       element.querySelectorAll(".step-cost"),
@@ -268,6 +300,8 @@ export function createVariationElement({
   element.append(html);
   const sizeStepEl = createSizeStepElement({
     handleSizeChange: handleVariationSizeChange,
+    handleTimeChange: handleTimeChange,
+    handleQuantityChange: handleQuantityChange,
     handleWeightChange,
   });
   const addItemBtn = createAddItemButton();
@@ -365,7 +399,7 @@ export function createVariationElement({
     }
     return [true, ""];
   };
-  const loadVariation = ({ sku, variation }) => {
+  const loadVariation = ({ sku, variation, supplier }) => {
     state.sku = sku;
     sizeStepEl.skuEl.value = sku;
     const [result, msg] = validate(sku);
@@ -376,6 +410,8 @@ export function createVariationElement({
     const skulength = sku.split(".").length;
     state.max = skulength > state.max ? skulength : state.max;
     sizeStepEl.setSize(variation);
+    sizeStepEl.setQuantity(supplier);
+    sizeStepEl.setTime(variation);
     const [...steps] = state.recipe;
     state.stepEls = createDynamicSteps({ recipeSteps: steps });
     updateSteps();
@@ -421,7 +457,8 @@ export function createVariationElement({
     });
     sticker.set({ product, variation, sku });
     updatePercent();
-    loadVariation({ sku, variation });
+    const supplier = findSupplier(product.Suppliers);
+    loadVariation({ sku, variation, supplier });
   };
   element.setSteps = (steps) => {
     state.steps = steps;
