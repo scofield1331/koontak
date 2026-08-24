@@ -81,6 +81,7 @@ export class Page {
         convert: this.convert,
         page: this,
       });
+      registry.register('retailForm', this.retailForm);
       this.images = new Images("images", { page: this });
     });
   }

@@ -64,6 +64,11 @@ export class RetailForm {
   getVariation(index) {
     return this.rows[index];
   }
+  getFirstVariation() {
+    const skus = Object.keys(this.rows);
+    if (skus.length) return this.rows[skus[0]];
+    return false;
+  }
   setProduct(inventoryItem) {
     this.inventoryItem = inventoryItem;
     this.supplier = this.cal.pickSupplier(this.inventoryItem);

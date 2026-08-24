@@ -17,9 +17,7 @@ export function createPromoTag(product, type = "ingredient", options) {
         "bodishop",
       );
     } else if (options.page == "Bakery") {
-      price = isNaN(mainVariation.RetailMarkup)
-        ? 0
-        : Number(mainVariation.RetailMarkup);
+      price = getBakeryPrice();
     }
   }
   const element = document.createElement("div");
@@ -57,9 +55,7 @@ export function createPromoTag(product, type = "ingredient", options) {
           "bodishop",
         );
       } else if (options.page == "Bakery") {
-        price = isNaN(mainVariation.RetailMarkup)
-          ? 0
-          : Number(mainVariation.RetailMarkup);
+        price = getBakeryPrice();
       }
     }
     element.querySelector(".price").innerHTML =
@@ -79,4 +75,14 @@ export function createPromoTag(product, type = "ingredient", options) {
   };
   element.updateType(type);
   return element;
+}
+
+function getBakeryPrice() {
+  let price = 0;
+  const retailForm = registry.get("retailForm");
+  if (retailForm) {
+    const variation = retailForm.getFirstVariation();
+    price = variation ? variation.getRetail() : 0;
+  }
+  return price;
 }

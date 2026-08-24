@@ -3,3 +3,9 @@ export async function getExclusiveProduct() {
     const response = request.json();
     return response;
 }
+
+export function soundAlert(msg) {
+    const audio = new Audio('../Bodi/retail/sounds/sound0.mp3');
+    audio.play();
+    alert(msg);
+}
