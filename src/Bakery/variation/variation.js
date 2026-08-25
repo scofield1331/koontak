@@ -5,7 +5,8 @@ import { createStepElement } from "./step";
 import { createSizeStepElement } from "./size";
 import { registry } from "@/service/Registry";
 import { defaultRecipeStep, isSkuExist, findSupplier } from "./Utils";
-
+import { printRecipe } from "../request";
+import Sortable from "sortablejs";
 // reducer
 const stateReducer = (state, action) => {
   if (action.type == "changeStep") {
@@ -29,6 +30,7 @@ export function createVariationElement({
   handleSaveVariation,
   handleSaveQuantity,
   handleSaveTime,
+  handleSaveRecipe,
   handleCostChange,
   handleSizeChange,
   products,
@@ -158,6 +160,7 @@ export function createVariationElement({
       }
     });
   };
+  //handle
   const handlePercentChange = ({ stepEl }) => {
     calculateTotalPercent();
     stepEl.updateWeightByRatio({ totalWeight: state.totalWeight });
@@ -194,6 +197,19 @@ export function createVariationElement({
       }
     });
   };
+  const handleStepMove = ({ oldIndex, newIndex }) => {
+    const item = state.stepEls.splice(oldIndex, 1)[0];
+    state.stepEls.splice(newIndex, 0, item);
+    showLoading();
+    handleSaveRecipe().then((rs) => {
+      hideLoading();
+      if (rs.success) {
+        element.querySelector(".actions .message").innerHTML = "";
+      } else {
+        element.querySelector(".actions .message").innerHTML = rs.message;
+      }
+    });
+  };
   //method
   const showLoading = () => {
     element.querySelector(".actions .message").innerHTML = /* HTML */ `
@@ -217,8 +233,16 @@ export function createVariationElement({
     });
   };
   const updateSteps = () => {
-    element.querySelector(".steps").innerHTML = "";
-    element.querySelector(".steps").append(...state.stepEls);
+    const container = element.querySelector(".steps");
+    container.innerHTML = "";
+    container.append(...state.stepEls);
+    if (!Sortable.get(container)) {
+      Sortable.create(container, {
+        animation: 150,
+        handle: ".move",
+        onEnd: handleStepMove,
+      });
+    }
   };
   const calculateCost = () => {
     let totalCost = Array.from(element.querySelectorAll(".step-cost")).reduce(
@@ -236,7 +260,7 @@ export function createVariationElement({
   const createWrapperElement = ({ steps }) => {
     const element = document.createElement("div");
     element.innerHTML = /* HTML */ `
-      <div class="row mb-3">
+      <div class="row mb-1">
         <div class="col-md-12">
           <div id="product-list" class="card update-trigger" data-replace="1">
             <div
@@ -245,12 +269,13 @@ export function createVariationElement({
             >
               <span>
                 <span>Product List</span>
+                <template id="print"></template>
               </span>
             </div>
           </div>
         </div>
       </div>
-      <div class="container-fluid py-3 steps"></div>
+      <div class="container-fluid steps"></div>
       <div class="mb-2">
         <template id="add-item"></template>
       </div>
@@ -298,6 +323,11 @@ export function createVariationElement({
   const element = document.getElementById("create-variation");
   const [html] = createWrapperElement({ steps });
   element.append(html);
+  const printBtn = Object.assign(document.createElement("button"), {
+    className: "btn btn-default print",
+    innerHTML: "Print",
+  });
+  element.querySelector("#print").replaceWith(printBtn);
   const sizeStepEl = createSizeStepElement({
     handleSizeChange: handleVariationSizeChange,
     handleTimeChange: handleTimeChange,
@@ -334,6 +364,16 @@ export function createVariationElement({
   });
   promoTagWrapper.addEventListener("click", (e) => {
     promoTagWrapper.print();
+  });
+  printBtn.addEventListener("click", (e) => {
+    const recipe = {};
+    console.log(state);
+    recipe.name = state.product.Product;
+    recipe.percent = state.totalPercent;
+    recipe.weight = state.totalWeight;
+    recipe.cost = state.totalCost;
+    recipe.steps = element.buildRecipe();
+    printRecipe(recipe);
   });
   //method
   const toSku = () => {

@@ -230,6 +230,7 @@ export class Page {
       handleSaveVariation: this.handleSaveVariation.bind(this),
       handleSaveQuantity: this.handleSaveQuantity.bind(this),
       handleSaveTime: this.handleSaveTime.bind(this),
+      handleSaveRecipe: this.handleSaveRecipe.bind(this),
       handleCostChange: this.handleCostChange.bind(this),
       steps: this.steps,
       recipes: this.recipes,
@@ -315,6 +316,23 @@ export class Page {
       variation.TaskPoint = Math.round((time / 60) * 1000) / 1000;
       updateData.Retail = this.product.Retail;
     }
+    return new Promise((resolve) => {
+      this.updateLog.update(updateData, this.product, 1).then((rs) => {
+        if (!rs.success) {
+          alert(rs.error);
+        }
+        resolve(rs);
+      });
+    });
+  }
+  handleSaveRecipe() {
+    if (!this.product) {
+      alert("product not selected");
+      return;
+    }
+    let updateData = {};
+    this.product.Recipe = this.variationCreate.buildRecipe();
+    updateData.Recipe = this.product.Recipe;
     return new Promise((resolve) => {
       this.updateLog.update(updateData, this.product, 1).then((rs) => {
         if (!rs.success) {

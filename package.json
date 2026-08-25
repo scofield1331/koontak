@@ -31,5 +31,8 @@
     "build": "wp --mode production",
     "build:none": "wp --mode none",
     "dev": "wp --mode development --watch"
+  },
+  "dependencies": {
+    "sortablejs": "^1.15.7"
   }
 }

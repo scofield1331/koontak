@@ -20,3 +20,21 @@ export async function uploadImage(key, name, file) {
     console.error("Upload error:", err);
   }
 }
+
+export function printRecipe(recipe) {
+  var form = document.createElement("form");
+  form.method = "POST";
+  form.action = "./dispatcher.php?action=printRecipe";
+  form.target = "_blank";
+  form.style.display = "none";
+
+  var input = document.createElement("input");
+  input.type = "hidden";
+  input.name = "recipe";
+  input.value = JSON.stringify(recipe);
+  form.appendChild(input);
+
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
+}

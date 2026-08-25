@@ -41,6 +41,9 @@ export function createStepElement({
   element.innerHTML = /* HTML */ `
     <div class="row input align-items-center">
       <div class="col col-md-2 d-flex px-1">
+        <button class="align-self-center me-1 p-1 move">
+          <i class="bi bi-arrows-move"></i>
+        </button>
         <template id="remove"></template>
         <template id="category-select"></template>
       </div>
@@ -316,7 +319,7 @@ export function createStepElement({
     costContent.priceInput.querySelector("input").value = state.cost.toFixed(2);
   };
   const fillValue = () => {
-    state.ingredient = state.recipeStep?.Ingredient ?? '';
+    state.ingredient = state.recipeStep?.Ingredient ?? "";
     catSelect.value = state.recipeStep?.Type ?? "";
     const stepStrategies = stepStrtegies[catSelect.value] ?? stepStrtegies.cost;
     stepStrategies.fillvalue();
