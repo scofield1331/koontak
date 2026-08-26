@@ -125,6 +125,10 @@ export class RetailForm {
     this.leftTable.empty();
     this.rightTable.empty();
   }
+  getTotalCost() {
+    console.log(this.supplier);
+    return this.supplier?.Cost ?? 0;
+  }
 }
 
 class Variation {

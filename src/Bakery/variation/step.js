@@ -151,6 +151,9 @@ export function createStepElement({
         state.content.percentInput.querySelector("input").value = state.percent;
       },
       findAndUpdate,
+      updateCost: (state) => {
+        state.cost = state.costPerGram * state.weight;
+      },
     },
   };
   // event
@@ -315,7 +318,8 @@ export function createStepElement({
     state.weight = weight;
   };
   element.updateCost = () => {
-    state.cost = state.costPerGram * state.weight;
+    const stepStrategy = stepStrtegies[state.key] ?? stepStrtegies.cost;
+    stepStrategy.updateCost?.(state);
     costContent.priceInput.querySelector("input").value = state.cost.toFixed(2);
   };
   const fillValue = () => {

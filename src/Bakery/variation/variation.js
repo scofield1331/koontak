@@ -1,5 +1,3 @@
-import { createPromoTagWrapper } from "@/Bodi/Shop/Label/PromoTagWrapper";
-import { createStickerElement } from "./sticker";
 import { Variation } from "@/Object/Variation";
 import { createStepElement } from "./step";
 import { createSizeStepElement } from "./size";
@@ -23,7 +21,6 @@ const stateReducer = (state, action) => {
   return state;
 };
 export function createVariationElement({
-  setting,
   steps,
   recipes,
   source,
@@ -34,6 +31,8 @@ export function createVariationElement({
   handleCostChange,
   handleSizeChange,
   products,
+  promoTagWrapper,
+  sticker,
 }) {
   const staticSteps = [];
   const dynamicSteps = Object.keys(steps).filter(
@@ -245,7 +244,7 @@ export function createVariationElement({
     }
   };
   const calculateCost = () => {
-    let totalCost = Array.from(element.querySelectorAll(".step-cost")).reduce(
+    let totalCost = element.getSteps().reduce(
       (total, step) => {
         return total + step.getCost();
       },
@@ -290,19 +289,6 @@ export function createVariationElement({
       <div class="mt-2 actions">
         <p class="text-danger message mt-2"></p>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <span>Label</span>
-        </div>
-      </div>
-      <div class="row">
-        <div class="mt-2 col-md-6 d-flex justify-content-center">
-          <div class="col-auto">
-            <div class="sticker"></div>
-          </div>
-        </div>
-        <div class="mt-2 label col-md-6"></div>
-      </div>
     `;
     return [element];
   };
@@ -338,12 +324,6 @@ export function createVariationElement({
   element.querySelector("#size-step").replaceWith(sizeStepEl);
   element.querySelector("#add-item").replaceWith(addItemBtn);
 
-  const promoTagWrapper = createPromoTagWrapper({ page: "Bakery" });
-  promoTagWrapper.classList.add("cursor-pointer");
-  const sticker = createStickerElement({ setting });
-  element.querySelector(".label").appendChild(promoTagWrapper);
-  element.querySelector(".sticker").appendChild(sticker);
-
   const messageEl = element.querySelector(".output .message");
   //event
   addItemBtn.addEventListener("click", (e) => {
@@ -362,17 +342,17 @@ export function createVariationElement({
     state.stepEls.push(newStep);
     element.querySelector(".steps").append(newStep);
   });
-  promoTagWrapper.addEventListener("click", (e) => {
-    promoTagWrapper.print();
-  });
   printBtn.addEventListener("click", (e) => {
     const recipe = {};
-    console.log(state);
     recipe.name = state.product.Product;
     recipe.percent = state.totalPercent;
     recipe.weight = state.totalWeight;
     recipe.cost = state.totalCost;
     recipe.steps = element.buildRecipe();
+    recipe.quantity = sizeStepEl.getQuantity();
+    recipe.time = sizeStepEl.getTime();
+    recipe.size = sizeStepEl.get();
+    recipe.instruction = state.product.Instruction;
     printRecipe(recipe);
   });
   //method

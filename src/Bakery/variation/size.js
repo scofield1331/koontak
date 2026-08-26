@@ -10,8 +10,6 @@ export function createSizeStepElement({
   handleWeightChange,
   handleTimeChange,
   handleQuantityChange,
-  supplier,
-  variation,
 }) {
   const element = document.createElement("div");
   element.className = `align-items-center mb-3 step step-weight`;
@@ -149,6 +147,8 @@ export function createSizeStepElement({
   element.updateCost = (cost) => {
     costEl.value = cost;
   };
+  element.getQuantity = () => state.quantity;
+  element.getTime = () => state.time;
   element.skuEl = skuEl;
   return element;
 }

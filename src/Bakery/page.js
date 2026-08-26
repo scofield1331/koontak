@@ -15,6 +15,8 @@ import "./css/sticker.css";
 import "./css/page.css";
 import "./css/create-variation.css";
 import { findSupplier, formatDate } from "./variation/Utils";
+import { promoTagWrapper } from "./label";
+import { createStickerElement } from "./sticker";
 
 export class Page {
   activeRow = null;
@@ -226,6 +228,12 @@ export class Page {
       }
     });
     this.setNewProductEvent();
+    this.promoTagWrapper = promoTagWrapper;
+    this.sticker = createStickerElement({ setting: this.setting });
+    this.right.renderLabel({
+      promoTagWrapper: this.promoTagWrapper,
+      sticker: this.sticker,
+    });
     this.variationCreate = createVariationElement({
       handleSaveVariation: this.handleSaveVariation.bind(this),
       handleSaveQuantity: this.handleSaveQuantity.bind(this),
@@ -235,7 +243,8 @@ export class Page {
       steps: this.steps,
       recipes: this.recipes,
       source: this.source,
-      setting: this.setting,
+      promoTagWrapper: this.promoTagWrapper,
+      sticker: this.sticker,
       handleSizeChange: this.handleSizeChange.bind(this),
       products: this.data,
       product: this.product,
@@ -253,16 +262,22 @@ export class Page {
   async handleCostChange({ totalCost }) {
     const cost = Math.round(totalCost * 100) / 100;
     const calculator = registry.get("calculator");
-    const supplier = calculator.pickSupplier(this.product);
-    if (!supplier) {
-      alert("supplier not found");
-      throw new Error("supplier not found");
+    const supplierPricing = calculator.pickSupplier(this.product);
+    if (!supplierPricing) {
+      alert("supplierPricing not found");
+      throw new Error("supplierPricing not found");
     }
-    supplier.Cost = cost;
+
+    const supplier = findSupplier(this.product.Suppliers);
+    if (supplier) {
+      supplier.Cost = `${cost}`;
+    }
+    supplierPricing.Cost = cost;
     const updateData = {};
     if (this.product.SuppliersPricing.length) {
       updateData.SuppliersPricing = this.product.SuppliersPricing;
-    } else {
+    }
+    if (this.product.Suppliers.length) {
       updateData.Suppliers = this.product.Suppliers;
     }
     const recipe = this.variationCreate.buildRecipe() ?? [];
@@ -291,6 +306,7 @@ export class Page {
     supplier.Purchase = quantity ?? "";
     supplier.SupplierSize = size ?? "";
     supplier.DatePurchase = date;
+    supplier.Cost = `${this.retailForm.getTotalCost()}`;
     updateData.Suppliers = this.product.Suppliers;
     return new Promise((resolve) => {
       this.updateLog.update(updateData, this.product, 1).then((rs) => {
@@ -345,12 +361,12 @@ export class Page {
   handleSaveVariation({ oldSku, newSku, key, value, state }) {
     let updateData = {};
     const calculator = registry.get("calculator");
-    const supplier = calculator.pickSupplier(this.product);
-    if (!supplier) {
-      alert("supplier not found");
-      throw new Error("supplier not found");
+    const supplierPricing = calculator.pickSupplier(this.product);
+    if (!supplierPricing) {
+      alert("supplierPricing not found");
+      throw new Error("supplierPricing not found");
     }
-    const isCostChanged = state.totalCost != supplier?.Cost;
+    const isCostChanged = state.totalCost != supplierPricing?.Cost;
     const cost = Math.round(state.totalCost * 100) / 100;
     if (this.product) {
       renameKeyKeepPositionAndRef(this.product.Retail, oldSku, newSku);
@@ -360,7 +376,11 @@ export class Page {
         this.product.Retail[newSku].ShipWeight = value;
       }
       if (isCostChanged) {
-        supplier.Cost = cost;
+        supplierPricing.Cost = `${cost}`;
+        const supplier = findSupplier(this.product.Suppliers);
+        if (supplier) {
+          supplier.Cost = `${cost}`;
+        }
       }
       updateData.Retail = this.product.Retail;
       let keys = [...this.variationCreate.getDynamicSteps()];

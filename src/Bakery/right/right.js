@@ -38,102 +38,30 @@ export function createRightElement({ handleDeleteProduct }) {
               </div>
             </div>
           </div>
-          <!------ product image ------->
-          <div id="images"></div>
-          <div>
-            <div class="store-listing-link-container">
-              <div>
-                <span>
-                  <label>Amazon</label>
-                  <input
-                    class="store-listing-link amazon_code"
-                    name="StoreListingASIN[amazon][0]"
-                    id="amazon"
-                    type="text"
-                  />
-                  <input
-                    class="amazon_UpdatedOn"
-                    name="StoreListingASIN[amazon][1]"
-                    id="amazon_UpdatedOn"
-                    type="text"
-                    value=""
-                  />
-                  <a
-                    href="javascript:void(0);"
-                    data-hreflink=""
-                    id="amazon_link"
-                    >EDIT</a
-                  >
-                  <a href="" id="amazon_preview" target="_blank">Preview</a>
-                </span>
-              </div>
-              <div>
-                <span>
-                  <label>Ebay</label>
-                  <input
-                    class="store-listing-link ebay_code"
-                    name="StoreListingASIN[ebay][0]"
-                    id="ebay"
-                    type="text"
-                  />
-                  <input
-                    class="ebay_UpdatedOn"
-                    name="StoreListingASIN[ebay][1]"
-                    id="ebay_UpdatedOn"
-                    type="text"
-                    value=""
-                  />
-                  <a href="javascript:void(0);" data-hreflink="" id="ebay_link"
-                    >EDIT</a
-                  >
-                  <a href="" id="ebay_preview" target="_blank">Preview</a>
-                </span>
-              </div>
-              <div>
-                <span>
-                  <label>Etsy</label>
-                  <input
-                    class="store-listing-link etsy_code"
-                    name="StoreListingASIN[etsy][0]"
-                    id="etsy"
-                    type="text"
-                  />
-                  <input
-                    class="etsy_UpdatedOn"
-                    name="StoreListingASIN[etsy][1]"
-                    id="etsy_UpdatedOn"
-                    type="text"
-                    value=""
-                  />
-                  <a href="javascript:void(0);" data-hreflink="" id="etsy_link"
-                    >EDIT</a
-                  >
-                  <a href="" id="etsy_preview" target="_blank">Preview</a></span
-                >
-              </div>
-              <div class="d-flex" style="gap: 5px; align-items: start;">
-                <span>Bodi For Life</span>
-                <a href="" class="bodi4lifeUrl" target="_blank">Preview</a>
-                <div class="bodi4life">
-                  <span>
-                    <select
-                      class="retail-switch"
-                      name="StoreListingASIN[bodi4life][]"
-                    >
-                      <option value="Off">Deactived</option>
-                      <option value="Active">Active</option>
-                    </select>
-                    <!-- <input name="StoreListingASIN[bodi4life][]" class="retail-date" id="bodi4life_UpdatedOn" type="text" value=""> -->
-                  </span>
-                </div>
-                <div class="category">
-                  <div class="subcategories" data-order="First"></div>
-                  <div style="clear:both"></div>
+
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header">
+                  <span>Label</span>
                 </div>
               </div>
-              <div></div>
+              <div class="row">
+                <div class="mt-2 col-md-6 d-flex justify-content-center">
+                  <div class="col-auto">
+                    <template id="sticker"></template>
+                  </div>
+                </div>
+                <div class="mt-2 label col-md-6">
+                  <template id="promotag"></template>
+                </div>
+              </div>
             </div>
           </div>
+
+          <!------ product image ------->
+          <div id="images"></div>
+
           <div class="row mb-3">
             <div class="col-md-12">
               <div class="card">
@@ -145,13 +73,125 @@ export function createRightElement({ handleDeleteProduct }) {
                     contenteditable="true"
                   ></article>
                 </div>
+                <div class="form-row" style="background-color: #FCFBE0">
+                  <div>Fix Comments</div>
+                  <div>
+                    <textarea name="FixComments" style="width:100%"></textarea>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <div class="form-row" style="background-color: #FCFBE0">
-            <div>Fix Comments</div>
-            <div>
-              <textarea name="FixComments" style="width:100%"></textarea>
+
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header">
+                  <span>Retailer</span>
+                </div>
+              </div>
+              <div>
+                <div class="store-listing-link-container">
+                  <div>
+                    <span>
+                      <label>Amazon</label>
+                      <input
+                        class="store-listing-link amazon_code"
+                        name="StoreListingASIN[amazon][0]"
+                        id="amazon"
+                        type="text"
+                      />
+                      <input
+                        class="amazon_UpdatedOn"
+                        name="StoreListingASIN[amazon][1]"
+                        id="amazon_UpdatedOn"
+                        type="text"
+                        value=""
+                      />
+                      <a
+                        href="javascript:void(0);"
+                        data-hreflink=""
+                        id="amazon_link"
+                        >EDIT</a
+                      >
+                      <a href="" id="amazon_preview" target="_blank">Preview</a>
+                    </span>
+                  </div>
+                  <div>
+                    <span>
+                      <label>Ebay</label>
+                      <input
+                        class="store-listing-link ebay_code"
+                        name="StoreListingASIN[ebay][0]"
+                        id="ebay"
+                        type="text"
+                      />
+                      <input
+                        class="ebay_UpdatedOn"
+                        name="StoreListingASIN[ebay][1]"
+                        id="ebay_UpdatedOn"
+                        type="text"
+                        value=""
+                      />
+                      <a
+                        href="javascript:void(0);"
+                        data-hreflink=""
+                        id="ebay_link"
+                        >EDIT</a
+                      >
+                      <a href="" id="ebay_preview" target="_blank">Preview</a>
+                    </span>
+                  </div>
+                  <div>
+                    <span>
+                      <label>Etsy</label>
+                      <input
+                        class="store-listing-link etsy_code"
+                        name="StoreListingASIN[etsy][0]"
+                        id="etsy"
+                        type="text"
+                      />
+                      <input
+                        class="etsy_UpdatedOn"
+                        name="StoreListingASIN[etsy][1]"
+                        id="etsy_UpdatedOn"
+                        type="text"
+                        value=""
+                      />
+                      <a
+                        href="javascript:void(0);"
+                        data-hreflink=""
+                        id="etsy_link"
+                        >EDIT</a
+                      >
+                      <a href="" id="etsy_preview" target="_blank"
+                        >Preview</a
+                      ></span
+                    >
+                  </div>
+                  <div class="d-flex" style="gap: 5px; align-items: start;">
+                    <span>Bodi For Life</span>
+                    <a href="" class="bodi4lifeUrl" target="_blank">Preview</a>
+                    <div class="bodi4life">
+                      <span>
+                        <select
+                          class="retail-switch"
+                          name="StoreListingASIN[bodi4life][]"
+                        >
+                          <option value="Off">Deactived</option>
+                          <option value="Active">Active</option>
+                        </select>
+                        <!-- <input name="StoreListingASIN[bodi4life][]" class="retail-date" id="bodi4life_UpdatedOn" type="text" value=""> -->
+                      </span>
+                    </div>
+                    <div class="category">
+                      <div class="subcategories" data-order="First"></div>
+                      <div style="clear:both"></div>
+                    </div>
+                  </div>
+                  <div></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -276,6 +316,10 @@ export function createRightElement({ handleDeleteProduct }) {
     e.find(".Description").html("");
     e.find(".Instruction").val("");
     e.find(".store-listing-link input").val("");
+  };
+  element.renderLabel = ({ promoTagWrapper, sticker }) => {
+    element.querySelector("#sticker").replaceWith(sticker);
+    element.querySelector("#promotag").replaceWith(promoTagWrapper);
   };
   //event
   element.querySelector(".delete").addEventListener("click", async (e) => {
