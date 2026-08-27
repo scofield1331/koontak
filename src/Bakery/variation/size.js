@@ -134,10 +134,9 @@ export function createSizeStepElement({
   };
   element.updatePercent = (percent) => {
     if (percent > 100) {
-      alert("ratio exceed 100%");
-      percentEl.classList.add("text-danger");
+      percentEl.classList.add("bg-danger-subtle");
     } else {
-      percentEl.classList.remove("text-danger");
+      percentEl.classList.remove("bg-danger-subtle");
     }
     percentEl.value = percent;
   };

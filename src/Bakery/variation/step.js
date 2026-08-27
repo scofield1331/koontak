@@ -66,6 +66,7 @@ export function createStepElement({
     handleSelect,
     handlePercentChange,
     stepEl: element,
+    getState
   });
   const shapeContent = createShapeStepElement({
     state,
@@ -148,7 +149,7 @@ export function createStepElement({
       updateImage,
       fillvalue: () => {
         state.percent = state.recipeStep.StepQuantity * 100;
-        state.content.percentInput.querySelector("input").value = state.percent;
+        state.content.percentInput.querySelector("input").value = Math.round(state.percent * 100)/100;
       },
       findAndUpdate,
       updateCost: (state) => {
@@ -314,6 +315,7 @@ export function createStepElement({
   element.updateWeightByRatio = ({ totalWeight }) => {
     let percent = isNaN(state.percent) ? 0 : state.percent;
     let weight = (totalWeight * percent) / 100;
+    weight = Math.round(weight * 100) / 100;
     costContent.weightInput.querySelector("input").value = weight;
     state.weight = weight;
   };
@@ -426,6 +428,7 @@ function createCostStepElement({
   handleSelect,
   handlePercentChange,
   stepEl,
+  getState
 }) {
   const wrapper = document.createElement("div");
   wrapper.style.display = "contents";
@@ -448,7 +451,7 @@ function createCostStepElement({
     className: "col col-md-1 px-1",
   });
   const weightInput = Object.assign(document.createElement("div"), {
-    innerHTML: `<input type="text" class="form-control bg-light" readonly />`,
+    innerHTML: `<input type="text" class="form-control bg-light" />`,
     className: "col col-md-1 px-1",
   });
   const priceInput = Object.assign(document.createElement("div"), {
@@ -487,7 +490,15 @@ function createCostStepElement({
   });
   percentInput.querySelector("input").addEventListener("change", (e) => {
     state.percent = parseFloat(e.target.value);
-    state.recipeStep.StepQuantity = (state.percent / 100).toFixed(2);
+    state.recipeStep.StepQuantity = (state.percent / 100).toFixed(4);
+    handlePercentChange({ stepEl: stepEl });
+  });
+  weightInput.querySelector("input").addEventListener("change", (e) => {
+    const weight = parseFloat(e.target.value);
+    const totalWeight = getState().totalWeight;
+    state.percent = Math.round(weight / totalWeight * 10000) / 100;
+    percentInput.querySelector("input").value = state.percent;
+    state.recipeStep.StepQuantity = (state.percent / 100).toFixed(4);
     handlePercentChange({ stepEl: stepEl });
   });
 
