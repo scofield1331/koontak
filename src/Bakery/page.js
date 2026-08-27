@@ -308,6 +308,7 @@ export class Page {
     supplier.DatePurchase = date;
     supplier.Cost = `${this.retailForm.getTotalCost()}`;
     updateData.Suppliers = this.product.Suppliers;
+    this.retailForm.updateTimeCost();
     return new Promise((resolve) => {
       this.updateLog.update(updateData, this.product, 1).then((rs) => {
         if (!rs.success) {
@@ -332,6 +333,7 @@ export class Page {
       variation.TaskPoint = Math.round((time / 60) * 1000) / 1000;
       updateData.Retail = this.product.Retail;
     }
+    this.retailForm.updateTimeCost();
     return new Promise((resolve) => {
       this.updateLog.update(updateData, this.product, 1).then((rs) => {
         if (!rs.success) {

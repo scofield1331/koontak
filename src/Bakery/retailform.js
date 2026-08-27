@@ -1,3 +1,4 @@
+import { findSupplier } from "./variation/Utils";
 let timer;
 export class RetailForm {
   constructor(inventoryItem = null, options = null) {
@@ -128,6 +129,11 @@ export class RetailForm {
   getTotalCost() {
     console.log(this.supplier);
     return this.supplier?.Cost ?? 0;
+  }
+  updateTimeCost() {
+    for (const sku in this.rows) {
+      this.rows[sku].updateTimeCost();
+    }
   }
 }
 
@@ -335,6 +341,15 @@ class Variation {
     this.rowLeft.find(".bodi-profit").html(bodiprofit.toFixed(2));
     this.rowLeft.find(".retail-profit").html(retailprofit.toFixed(2));
   }
+  updateTimeCost() {
+    const product = this.product;
+    const variation = this.variation;
+    const time = variation.TaskPoint ?? 0;
+    const supplier = findSupplier(product.Suppliers);
+    const quantity = supplier.Purchase ?? 0;
+    const timecost = 16 * time * quantity;
+    this.rowLeft.find(".time-cost").html(timecost.toFixed(2));
+  }
   updateCost() {
     this.rowLeft.find(".total-cost").html(this.retailForm.supplier?.Cost ?? 0);
   }
@@ -419,6 +434,7 @@ class Variation {
     this.updateShopPrice();
     this.updateRetailer();
     this.updateProfit();
+    this.updateTimeCost();
   }
 
   getPercent() {
@@ -465,6 +481,7 @@ function createElement() {
           <thead>
             <th>cost</th>
             <th>bodi profit</th>
+            <th>Time cost</th>
             <th>retail profit</th>
             <th>Percent</th>
           </thead>
@@ -492,6 +509,11 @@ function createElement() {
           <td class="align-middle">
             <div class="d-flex align-items-center">
               <span class="text-value bodi-profit"></span>
+            </div>
+          </td>
+          <td class="align-middle">
+            <div class="d-flex align-items-center">
+              <span class="text-value time-cost text-danger"></span>
             </div>
           </td>
           <td class="align-middle">

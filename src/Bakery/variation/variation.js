@@ -12,7 +12,7 @@ const stateReducer = (state, action) => {
   } else if (action.type == "updatePercent") {
     state = { ...state, totalPercent: action.payload };
   } else if (action.type == "updateWeight") {
-    state = { ...state, totalWeight: action.payload };
+    state = { ...state, expectedWeight: action.payload };
   } else if (action.type == "updateCost") {
     state = { ...state, totalCost: action.payload };
   } else if (action.type == "updateVariation") {
@@ -45,6 +45,7 @@ export function createVariationElement({
     sku: "",
     totalPercent: 0,
     totalWeight: 0,
+    expectedWeight: 0,
     totalCost: 0,
     variation: false,
     steps: [],
@@ -162,7 +163,7 @@ export function createVariationElement({
   //handle
   const handlePercentChange = ({ stepEl }) => {
     calculateTotalPercent();
-    stepEl.updateWeightByRatio({ totalWeight: state.totalWeight });
+    stepEl.updateWeightByRatio({ expectedWeight: state.expectedWeight });
     stepEl.updateCost();
     updatePercent();
     calculateCost();
@@ -209,6 +210,24 @@ export function createVariationElement({
       }
     });
   };
+  const handleResetRatio = () => {
+    const expectedWeight = state.expectedWeight;
+    const totalPercent = state.totalPercent;
+    const totalWeight = (expectedWeight * totalPercent) / 100;
+    if (totalWeight == 0) {
+      alert("can't devide by 0 ( totalweight)");
+      return;
+    }
+    const ratio = expectedWeight / totalWeight;
+    element.getSteps().forEach((step) => {
+      step.resetRatio({ ratio });
+    });
+    calculateTotalPercent();
+    updatePercent();
+    calculateCost();
+    updateCost();
+    saveCostChange();
+  };
   //method
   const showLoading = () => {
     element.querySelector(".actions .message").innerHTML = /* HTML */ `
@@ -244,12 +263,9 @@ export function createVariationElement({
     }
   };
   const calculateCost = () => {
-    let totalCost = element.getSteps().reduce(
-      (total, step) => {
-        return total + step.getCost();
-      },
-      0,
-    );
+    let totalCost = element.getSteps().reduce((total, step) => {
+      return total + step.getCost();
+    }, 0);
     state = stateReducer(state, {
       type: "updateCost",
       payload: totalCost,
@@ -299,9 +315,9 @@ export function createVariationElement({
     sizeStepEl.updatePercent(state.totalPercent);
   };
   const updateWeight = () => {
-    sizeStepEl.updateWeight(state.totalWeight);
+    sizeStepEl.updateWeight(state.expectedWeight);
     Array.from(element.querySelectorAll(".step-cost")).forEach((step) => {
-      step.updateWeightByRatio({ totalWeight: state.totalWeight });
+      step.updateWeightByRatio({ expectedWeight: state.expectedWeight });
       step.updateCost();
     });
   };
@@ -316,9 +332,10 @@ export function createVariationElement({
   element.querySelector("#print").replaceWith(printBtn);
   const sizeStepEl = createSizeStepElement({
     handleSizeChange: handleVariationSizeChange,
-    handleTimeChange: handleTimeChange,
-    handleQuantityChange: handleQuantityChange,
+    handleTimeChange,
+    handleQuantityChange,
     handleWeightChange,
+    handleResetRatio,
   });
   const addItemBtn = createAddItemButton();
   element.querySelector("#size-step").replaceWith(sizeStepEl);
@@ -346,7 +363,7 @@ export function createVariationElement({
     const recipe = {};
     recipe.name = state.product.Product;
     recipe.percent = state.totalPercent;
-    recipe.weight = state.totalWeight;
+    recipe.weight = state.expectedWeight;
     recipe.cost = state.totalCost;
     recipe.steps = element.buildRecipe();
     recipe.quantity = sizeStepEl.getQuantity();

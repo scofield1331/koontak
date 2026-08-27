@@ -10,6 +10,7 @@ export function createSizeStepElement({
   handleWeightChange,
   handleTimeChange,
   handleQuantityChange,
+  handleResetRatio
 }) {
   const element = document.createElement("div");
   element.className = `align-items-center mb-3 step step-weight`;
@@ -56,6 +57,13 @@ export function createSizeStepElement({
         >
         <template id="cost"></template>
       </div>
+      <div class="col col-md-1 px-1">
+        <label
+          class="col-auto col-form-label fw-bold text-nowrap text-truncate w-100"
+          >&nbsp;</label
+        >
+        <template id="reset-ratio"></template>
+      </div>
 
       <template id="message"></template>
     </div>
@@ -76,6 +84,7 @@ export function createSizeStepElement({
     type: "text",
     className: "form-control bg-light w-100",
   });
+  const resetRatioBtn = createResetRatioButton();
   element.querySelector("#size").replaceWith(sizeEl);
   element.querySelector("#message").replaceWith(messageEl);
   element.querySelector("#unit").replaceWith(unitEl);
@@ -85,6 +94,7 @@ export function createSizeStepElement({
   element.querySelector("#sku").replaceWith(skuEl);
   element.querySelector("#quantity").replaceWith(qtyInput);
   element.querySelector("#time").replaceWith(timeInput);
+  element.querySelector("#reset-ratio").replaceWith(resetRatioBtn);
   // event
   sizeEl.addEventListener("change", (e) => {
     state.size = e.target.value;
@@ -102,6 +112,9 @@ export function createSizeStepElement({
   timeInput.addEventListener("change", (e) => {
     state.time = e.target.value;
     handleTimeChange(state);
+  })
+  resetRatioBtn.addEventListener('click', e => {
+    handleResetRatio();
   })
   // method
   const update = () => {
@@ -132,7 +145,8 @@ export function createSizeStepElement({
   element.get = () => {
     return `${state.size ?? ""}${state.unit?.toLowerCase() ?? "oz"}`;
   };
-  element.updatePercent = (percent) => {
+  element.updatePercent = (value) => {
+    let percent = Math.round(value * 100) / 100;
     if (percent > 100) {
       percentEl.classList.add("bg-danger-subtle");
     } else {
@@ -195,5 +209,12 @@ function createCostElement() {
 function createMessageElement() {
   const element = document.createElement("div");
   element.className = "text-danger";
+  return element;
+}
+function createResetRatioButton() {
+  const element = Object.assign(document.createElement("button"), {
+    className: "btn btn-default reset-ratio",
+    innerHTML: "Reset Ratio"
+  });
   return element;
 }

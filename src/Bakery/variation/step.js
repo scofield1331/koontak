@@ -66,7 +66,7 @@ export function createStepElement({
     handleSelect,
     handlePercentChange,
     stepEl: element,
-    getState
+    getState,
   });
   const shapeContent = createShapeStepElement({
     state,
@@ -149,11 +149,21 @@ export function createStepElement({
       updateImage,
       fillvalue: () => {
         state.percent = state.recipeStep.StepQuantity * 100;
-        state.content.percentInput.querySelector("input").value = Math.round(state.percent * 100)/100;
+        state.content.percentInput.querySelector("input").value =
+          Math.round(state.percent * 100) / 100;
       },
       findAndUpdate,
       updateCost: (state) => {
         state.cost = state.costPerGram * state.weight;
+      },
+      resetRatio: (ratio) => {
+        state.percent = Math.round(state.percent * ratio * 100) / 100;
+        costContent.percentInput.querySelector("input").value = state.percent;
+        state.recipeStep.StepQuantity = (state.percent / 100).toFixed(4);
+        element.updateWeightByRatio({
+          expectedWeight: getState().expectedWeight,
+        });
+        element.updateCost();
       },
     },
   };
@@ -278,7 +288,9 @@ export function createStepElement({
           </div>
         `;
       state.costPerGram = cost;
-      element.updateWeightByRatio({ totalWeight: getState().totalWeight });
+      element.updateWeightByRatio({
+        expectedWeight: getState().expectedWeight,
+      });
       element.updateCost();
     } else {
       element.clear();
@@ -292,7 +304,9 @@ export function createStepElement({
       costContent.pricePerGramInput.querySelector("input").value =
         costPerGram.toFixed(3);
       state.costPerGram = costPerGram;
-      element.updateWeightByRatio({ totalWeight: getState().totalWeight });
+      element.updateWeightByRatio({
+        expectedWeight: getState().expectedWeight,
+      });
       element.updateCost();
     } else {
       element.clear();
@@ -312,9 +326,9 @@ export function createStepElement({
     }
   }
   // expose
-  element.updateWeightByRatio = ({ totalWeight }) => {
+  element.updateWeightByRatio = ({ expectedWeight }) => {
     let percent = isNaN(state.percent) ? 0 : state.percent;
-    let weight = (totalWeight * percent) / 100;
+    let weight = (expectedWeight * percent) / 100;
     weight = Math.round(weight * 100) / 100;
     costContent.weightInput.querySelector("input").value = weight;
     state.weight = weight;
@@ -358,6 +372,10 @@ export function createStepElement({
         `${state.recipeStep.Ingredient ?? ""} not found`;
     }
   }
+  element.resetRatio = ({ ratio }) => {
+    const stepStrategy = stepStrtegies[state.key] ?? stepStrtegies.cost;
+    if (stepStrategy.resetRatio) stepStrategy.resetRatio(ratio);
+  };
   element.clear = () => {
     state.costPerGram = 0;
     state.weight = 0;
@@ -428,7 +446,7 @@ function createCostStepElement({
   handleSelect,
   handlePercentChange,
   stepEl,
-  getState
+  getState,
 }) {
   const wrapper = document.createElement("div");
   wrapper.style.display = "contents";
@@ -495,8 +513,8 @@ function createCostStepElement({
   });
   weightInput.querySelector("input").addEventListener("change", (e) => {
     const weight = parseFloat(e.target.value);
-    const totalWeight = getState().totalWeight;
-    state.percent = Math.round(weight / totalWeight * 10000) / 100;
+    const expectedWeight = getState().expectedWeight;
+    state.percent = Math.round((weight / expectedWeight) * 10000) / 100;
     percentInput.querySelector("input").value = state.percent;
     state.recipeStep.StepQuantity = (state.percent / 100).toFixed(4);
     handlePercentChange({ stepEl: stepEl });
