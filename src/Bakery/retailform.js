@@ -347,7 +347,7 @@ class Variation {
     const time = variation.TaskPoint ?? 0;
     const supplier = findSupplier(product.Suppliers);
     const quantity = supplier.Purchase ?? 0;
-    const timecost = 16 * time * quantity;
+    const timecost = 16 * time / quantity;
     this.rowLeft.find(".time-cost").html(timecost.toFixed(2));
   }
   updateCost() {
@@ -481,7 +481,6 @@ function createElement() {
           <thead>
             <th>cost</th>
             <th>bodi profit</th>
-            <th>Time cost</th>
             <th>retail profit</th>
             <th>Percent</th>
           </thead>
@@ -508,12 +507,7 @@ function createElement() {
           </td>
           <td class="align-middle">
             <div class="d-flex align-items-center">
-              <span class="text-value bodi-profit"></span>
-            </div>
-          </td>
-          <td class="align-middle">
-            <div class="d-flex align-items-center">
-              <span class="text-value time-cost text-danger"></span>
+              <span class="text-value bodi-profit"></span>  <span class="text-danger">[<span class="text-value time-cost"></span>]</span>
             </div>
           </td>
           <td class="align-middle">
