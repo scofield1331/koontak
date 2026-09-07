@@ -48,7 +48,6 @@ export function createVariationElement({
     expectedWeight: 0,
     totalCost: 0,
     variation: false,
-    steps: [],
     recipe: false,
     stepEls: [],
     max: 5,
@@ -345,7 +344,7 @@ export function createVariationElement({
   //event
   addItemBtn.addEventListener("click", (e) => {
     const newStep = createStepElement({
-      steps,
+      steps: state.steps,
       recipeStep: structuredClone(defaultRecipeStep),
       source,
       recipes,
@@ -376,38 +375,54 @@ export function createVariationElement({
   const toSku = () => {
     const size = sizeStepEl.get();
     const steps = state.stepEls
+      .filter((step) => step.getKey() !== "packaging")
       .map((e) => e.get())
       .filter((v) => v.trim() != "");
     let skus = ["Bake", size, ...steps].filter((v) => v != false && v !== "0");
-    if (skus.length > state.max) {
-      skus = skus.slice(0, state.max);
-    }
-    return skus.join(".");
+
+    return skus;
   };
   const buildOutput = () => {
     sizeStepEl.skuEl.classList.remove("is-invalid");
     element.querySelector(".output .message").innerHTML = "";
-    let output = toSku(state);
-    sizeStepEl.skuEl.value = output;
-    const splitOutput = output.split(".");
+    let splitOutput = toSku(state);
+    let rs;
     if (splitOutput.length >= 5) {
-      const rs = isSkuExist(output, state.product.Product, products);
-      if (rs) {
-        state.max = splitOutput.length + 1;
+      let isExist = false;
+      for (let i = 5; i <= splitOutput.length; i++) {
+        const test = splitOutput.slice(0, i).join(".");
+        rs = isSkuExist(test, state.product.Product, products);
+        if (rs) {
+          state.max = i + 1;
+          isExist = true;
+        } else {
+          state.max = i;
+          isExist = false;
+          break;
+        }
+      }
+      if (splitOutput.length > state.max) {
+        splitOutput = splitOutput.slice(0, state.max);
+      }
+      let output = splitOutput.join(".");
+      sizeStepEl.skuEl.value = output;
+      if (isExist) {
         sizeStepEl.skuEl.classList.add("is-invalid");
         element.querySelector(".output .message").innerHTML =
           `SKU ${output} exists in product ${rs.Product}`;
       } else {
-        state.max = splitOutput.length;
         sizeStepEl.skuEl.classList.remove("is-invalid");
         element.querySelector(".output .message").innerHTML = "";
       }
+    } else {
+      let output = splitOutput.join(".");
+      sizeStepEl.skuEl.value = output;
     }
   };
   const createDynamicSteps = ({ recipeSteps }) => {
     const stepEls = recipeSteps.map((recipeStep) =>
       createStepElement({
-        steps,
+        steps: state.steps,
         recipeStep,
         source,
         recipes,
@@ -444,8 +459,7 @@ export function createVariationElement({
       messageEl.innerHTML = msg;
       return;
     }
-    const skulength = sku.split(".").length;
-    state.max = skulength > state.max ? skulength : state.max;
+    state.max = 5;
     sizeStepEl.setSize(variation);
     sizeStepEl.setQuantity(supplier);
     sizeStepEl.setTime(variation);

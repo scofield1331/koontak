@@ -124,9 +124,8 @@ export function createSizeStepElement({
     timeInput.value = state.time;
   };
   //public
-  element.setSize = ({ RetailSize, RetailUnit }) => {
+  element.setSize = ({ RetailSize }) => {
     state.size = RetailSize ?? 4;
-    state.unit = RetailUnit ?? "oz";
     const converter = registry.get("converter");
     let togr = Math.round(
       converter.convertStockValue(state.size, state.unit, "gr"),
@@ -147,7 +146,7 @@ export function createSizeStepElement({
   };
   element.updatePercent = (value) => {
     let percent = Math.round(value * 100) / 100;
-    if (percent > 100) {
+    if (percent != 100) {
       percentEl.classList.add("bg-danger-subtle");
     } else {
       percentEl.classList.remove("bg-danger-subtle");
