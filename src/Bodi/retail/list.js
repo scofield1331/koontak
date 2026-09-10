@@ -1,5 +1,5 @@
 import { createOrderElement } from "./order.js";
-import { getTotalPrice } from "./utils.js";
+import { getTotalPrice } from "./Utils.js";
 export function createOrderListElement({
   orders,
   onShowClick,

@@ -1,4 +1,4 @@
-import { getColor } from "./utils.js";
+import { getColor } from "./Utils.js";
 export function createOrderElement({ order, onShowClick }) {
   const orderElement = document.createElement("div");
   orderElement.className = `order order-log ${getColor(order.Order.OrderStatus)}`;
