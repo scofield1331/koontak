@@ -1,0 +1,146 @@
+:root {
+  --border: #d7dbe0;
+  --header-bg: #f4f5f7;
+  --cell-bg: #ffffff;
+  --today-bg: #fff7ec;
+  --accent: #3b6ea5;
+  --text: #1f2430;
+  --muted: #6b7280;
+  --card-bg: #eef4fb;
+  --card-border: #b9d2ea;
+  --card-drag-bg: #fdf0d9;
+  --card-drag-border: #e9c27a;
+  --radius: 6px;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 32px;
+  background: #f0f1f3;
+  color: var(--text);
+}
+h1 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+p.sub {
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.grid-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--cell-bg);
+}
+table.schedule {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 760px;
+}
+table.schedule th,
+table.schedule td {
+  border: 1px solid var(--border);
+  vertical-align: top;
+}
+table.schedule thead th {
+  background: var(--header-bg);
+  padding: 10px 8px;
+  text-align: left;
+  font-size: 13px;
+}
+table.schedule thead th .day-name {
+  font-weight: 600;
+  display: block;
+}
+table.schedule thead th .day-date {
+  color: var(--muted);
+  font-size: 11px;
+}
+table.schedule th.time-col,
+table.schedule td.time-col {
+  background: var(--header-bg);
+  width: 90px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 10px 8px;
+  white-space: nowrap;
+}
+td.day-cell {
+  padding: 6px;
+  min-width: 130px;
+  min-height: 70px;
+  transition: background-color 120ms ease;
+  background: #fff;
+}
+td.day-cell.today {
+  background: var(--today-bg);
+}
+td.day-cell.drag-over {
+  background: #eaf2fb;
+}
+.task-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  cursor: grab;
+  user-select: none;
+}
+.task-card:active {
+  cursor: grabbing;
+}
+.task-card .task-title {
+  font-weight: 600;
+  display: block;
+}
+.task-card .task-detail {
+  color: var(--muted);
+  font-size: 11px;
+}
+.task-card.sortable-ghost {
+  opacity: 0.4;
+}
+.task-card.sortable-chosen {
+  background: var(--card-drag-bg);
+  border-color: var(--card-drag-border);
+}
+.task-card.sortable-drag {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+.empty-hint {
+  font-size: 11px;
+  color: #b8bcc4;
+  padding: 4px 2px;
+  pointer-events: none;
+}
+#log {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--muted);
+  font-family: ui-monospace, Consolas, monospace;
+  white-space: pre-wrap;
+}
+
+.task-card.Ordered, .task-card.StandBy {
+    background-color: #c5e0f0;
+}
+.task-card.OnlineShop, .task-card.OnlineLB {
+    background-color: #ddeaff;
+}
+.task-card.AddToShop {
+    background-color: #eecf91;
+}
+.task-card.Process, .task-card.AddToStock, .task-card.AddToShip, .task-card.AddToShop {
+    background-color: #c6e8c6;
+}
